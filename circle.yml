@@ -33,6 +33,7 @@ deployment:
     branch: master
     owner: openfresh
     commands:
+      - make build
       - "docker build -t $CIRCLE_PROJECT_USERNAME/plasma:latest ."
       - "docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS"
       - "docker push $CIRCLE_PROJECT_USERNAME/plasma:latest"
