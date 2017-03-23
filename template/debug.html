@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Debug</title>
+    </head>
+    <body>
+
+        <label>
+            イベント名
+        <input id="eventName" type="text" >
+        </label>
+        <label>
+            イベントデータ
+        <input id="eventData" type="text" >
+        </label>
+        <label>
+        <input id="eventSubmit" type="submit" >
+        </label>
+        <script>
+         function submit() {
+             var eventName = document.getElementById("eventName").value;
+             var eventData = document.getElementById("eventData").value;
+
+             var event = {
+                 "meta": {
+                     "type": eventName,
+                 },
+                 "data": eventData
+             };lencia/plasma
+
+             var xhr = new XMLHttpRequest();
+             xhr.open("POST", "/debug");
+             xhr.setRequestHeader("Content-Type", "application/json");
+             xhr.send(JSON.stringify(event));
+         };
+
+         window.onload = function() {
+             document.getElementById("eventSubmit").addEventListener("click", function() {
+                 submit();
+             });
+         };
+        </script>
+    </body>
+</html>

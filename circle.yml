@@ -1,0 +1,38 @@
+general:
+  build_dir: ../.go_workspace/src/github.com/openfresh/$CIRCLE_PROJECT_REPONAME
+
+machine:
+  timezone: Asia/Tokyo
+  environment:
+    GOROOT_BOOTSTRAP: /usr/local/go
+    GOPATH: "${HOME}/.go_workspace"
+    PATH: "/usr/local/go/bin:${PATH}"
+  services:
+    - docker
+    - redis
+  post:
+    - rm -rf ".go_workspace/src/github.com/openfresh/$CIRCLE_PROJECT_REPONAME"
+    - mkdir -p ".go_workspace/src/github.com/openfresh"
+    - mv $CIRCLE_PROJECT_REPONAME ".go_workspace/src/github.com/openfresh/"
+    - mkdir -p $CIRCLE_PROJECT_REPONAME
+
+dependencies:
+  cache_directories:
+    - "~/.glide"
+    - "~/.tool"
+  pre:
+    - make install-go
+    - make deps
+
+test:
+  override:
+    - make test
+
+deployment:
+  hub:
+    branch: master
+    owner: openfresh
+    commands:
+      - "docker build -t $CIRCLE_PROJECT_USERNAME/plasma:latest ."
+      - "docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS"
+      - "docker push $CIRCLE_PROJECT_USERNAME/plasma:latest"

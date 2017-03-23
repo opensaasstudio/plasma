@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+service StreamService {
+    rpc Events(Request) returns (stream Payload) {}
+
+}
+
+message Request {
+    repeated EventType Events = 1;
+}
+
+message EventType {
+    string type = 1;
+}
+
+message Payload {
+    EventType eventType = 1;
+    string data = 2;
+}
