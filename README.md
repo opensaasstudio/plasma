@@ -5,6 +5,7 @@ plasma
 [![Language](https://img.shields.io/badge/language-go-brightgreen.svg?style=flat)](https://golang.org/)
 [![issues](https://img.shields.io/github/issues/openfresh/plasma.svg?style=flat)](https://github.com/openfresh/plasma/issues?state=open)
 [![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
+[![imagelayers.io](https://badge.imagelayers.io/openfresh/plasma:latest.svg)](https://imagelayers.io/?images=openfresh/plasma:latest 'Get your own badge on imagelayers.io')
 
 ![logo](img/plasma_logo.png)
 
