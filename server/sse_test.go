@@ -50,7 +50,7 @@ func TestIsNotSupportSSE(t *testing.T) {
 	}
 }
 
-func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber) sseHandler {
+func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber, origin string) sseHandler {
 	logger, err := log.NewLogger(config.Log{
 		Out:   "discard",
 		Level: "error",
@@ -62,6 +62,7 @@ func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber) sseHandler {
 			EventQuery: "eventType",
 			Retry:      2000,
 		},
+		Origin: origin,
 	}
 	handler := newHandler(pb, logger, logger, config)
 
@@ -72,7 +73,8 @@ func TestSSEHandler(t *testing.T) {
 	assert := assert.New(t)
 	pb := pubsub.NewPubSub()
 
-	handler := setUpSSEHandler(t, pb)
+	origin := "*.test.com"
+	handler := setUpSSEHandler(t, pb, origin)
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
@@ -182,6 +184,8 @@ func TestSSEHandler(t *testing.T) {
 
 				assert.True(flag)
 				cases[i].actualCount++
+
+				assert.Equal(resp.Header.Get("Access-Control-Allow-Origin"), origin)
 
 				js := make(map[string]interface{})
 				isJSON := json.Unmarshal([]byte(p.Data), &js) == nil

@@ -37,6 +37,7 @@ type Config struct {
 	ErrorLog   Log  `envconfig:"ERROR_LOG"`
 	AccessLog  Log  `envconfig:"ACCESS_LOG"`
 	TLS        Cert `envconfig:"TLS"`
+	Origin     string
 }
 
 type ServerSideEvent struct {

@@ -13,12 +13,12 @@ import (
 
 	"encoding/json"
 
+	"github.com/mssola/user_agent"
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/manager"
 	"github.com/openfresh/plasma/pubsub"
-	"github.com/mssola/user_agent"
 )
 
 func NewSSEServer(pb pubsub.PubSuber, accessLogger *zap.Logger, errorLogger *zap.Logger, config config.Config) *http.Server {
@@ -191,6 +191,7 @@ func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", h.config.Origin)
 
 		var notify <-chan bool
 		notifier, ok := w.(http.CloseNotifier)
