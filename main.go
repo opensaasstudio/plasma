@@ -20,7 +20,6 @@ import (
 	"github.com/openfresh/plasma/subscriber"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type Service struct {
@@ -46,6 +45,14 @@ func ELBHealthCheckMatcher() cmux.Matcher {
 }
 
 func plasmaListener(logger *zap.Logger, config config.Config) net.Listener {
+	l, err := net.Listen("tcp", ":"+config.Port)
+	if err != nil {
+		logger.Fatal("failed to listen",
+			zap.Error(err),
+			zap.String("port", config.Port),
+		)
+	}
+
 	if config.TLS.CertFile != "" && config.TLS.KeyFile != "" {
 		cer, err := tls.LoadX509KeyPair(config.TLS.CertFile, config.TLS.KeyFile)
 		if err != nil {
@@ -56,50 +63,17 @@ func plasmaListener(logger *zap.Logger, config config.Config) net.Listener {
 			)
 		}
 
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{cer},
-		}
-
-		l, err := tls.Listen("tcp", ":"+config.Port, tlsConfig)
-		if err != nil {
-			logger.Fatal("failed to listen TLS",
-				zap.Error(err),
-				zap.String("certFile", config.TLS.CertFile),
-				zap.String("keyFile", config.TLS.KeyFile),
-			)
-		}
 		logger.Info("enable TLS mode",
 			zap.String("certFile", config.TLS.CertFile),
 			zap.String("keyFile", config.TLS.KeyFile),
 		)
-		return l
-	} else {
-		l, err := net.Listen("tcp", ":"+config.Port)
-		if err != nil {
-			logger.Fatal("failed to listen",
-				zap.Error(err),
-				zap.String("port", config.Port),
-			)
-		}
-		logger.Info("non TLS mode")
-		return l
+		return tls.NewListener(l, &tls.Config{
+			Certificates: []tls.Certificate{cer},
+		})
 	}
-}
 
-func plasmaGRPCServerOption(logger *zap.Logger, certFile string, keyFile string) []grpc.ServerOption {
-	var opts []grpc.ServerOption
-	if certFile != "" && keyFile != "" {
-		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err != nil {
-			logger.Fatal("failed to load TLS credentials for gRPC",
-				zap.Error(err),
-				zap.String("certFile", certFile),
-				zap.String("keyFile", certFile),
-			)
-		}
-		opts = []grpc.ServerOption{grpc.Creds(creds)}
-	}
-	return opts
+	logger.Info("non TLS mode")
+	return l
 }
 
 func main() {
@@ -140,8 +114,7 @@ func main() {
 	}()
 
 	// For Native Client
-	opts := plasmaGRPCServerOption(errorLogger, config.TLS.CertFile, config.TLS.KeyFile)
-	grpcServer := grpc.NewServer(opts...)
+	grpcServer := grpc.NewServer()
 	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(pubsuber, accessLogger, errorLogger, config))
 
 	// For Web Front End
