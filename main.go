@@ -24,7 +24,7 @@ import (
 
 type Service struct {
 	Serve    func(l net.Listener) error
-	Matchers []cmux.Matcher
+	Listener net.Listener
 }
 
 const ELBHealthCheckUserAgent = "ELB-HealthChecker/"
@@ -123,30 +123,24 @@ func main() {
 	// For AWS ELB
 	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
 
+	m := cmux.New(l)
 	services := []Service{
 		{
-			Serve: grpcServer.Serve,
-			Matchers: []cmux.Matcher{
-				cmux.HTTP2HeaderField("content-type", "application/grpc"),
-			},
+			Serve:    grpcServer.Serve,
+			Listener: m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc")),
 		},
 		{
-			Serve: healthCheckServer.Serve,
-			Matchers: []cmux.Matcher{
-				ELBHealthCheckMatcher(),
-			},
+			Serve:    healthCheckServer.Serve,
+			Listener: m.Match(ELBHealthCheckMatcher()),
 		},
 		{
-			Serve: sseServer.Serve,
-			Matchers: []cmux.Matcher{
-				cmux.HTTP1(),
-			},
+			Serve:    sseServer.Serve,
+			Listener: m.Match(cmux.HTTP1()),
 		},
 	}
 
-	m := cmux.New(l)
 	for _, service := range services {
-		go service.Serve(m.Match(service.Matchers...))
+		go service.Serve(service.Listener)
 	}
 
 	m.Serve()
