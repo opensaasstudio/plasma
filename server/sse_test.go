@@ -58,7 +58,7 @@ func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber, origin string) sseHandler
 	require.NoError(t, err)
 
 	config := config.Config{
-		SSE: config.ServerSideEvent{
+		SSE: config.ServerSentEvent{
 			EventQuery: "eventType",
 			Retry:      2000,
 		},

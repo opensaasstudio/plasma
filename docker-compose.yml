@@ -3,6 +3,7 @@ plasma:
   ports:
     - 8080:8080
   environment:
+    PLASMA_DEBUG: true
     PLASMA_SUBSCRIBER_TYPE: redis
     PLASMA_SUBSCRIBER_REDIS_ADDR: redis:6379
     PLASMA_SUBSCRIBER_REDIS_CHANNELS: plasma
