@@ -51,7 +51,7 @@ $ docker-compose up -d
 
 # Usage Subscriber
 
-## Sever Side Event
+## Sever Sent Event
 
 [Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 
