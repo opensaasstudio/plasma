@@ -31,13 +31,14 @@ func New() Config {
 }
 
 type Config struct {
+	AccessLog  Log `envconfig:"ACCESS_LOG"`
+	ErrorLog   Log `envconfig:"ERROR_LOG"`
+	Debug      bool
+	Origin     string
 	Port       string `default:"8080"`
 	SSE        ServerSideEvent
 	Subscriber Subscriber
-	ErrorLog   Log  `envconfig:"ERROR_LOG"`
-	AccessLog  Log  `envconfig:"ACCESS_LOG"`
 	TLS        Cert `envconfig:"TLS"`
-	Origin     string
 }
 
 type ServerSideEvent struct {
