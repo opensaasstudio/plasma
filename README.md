@@ -14,7 +14,7 @@ plasma is event push middleware by using gRPC stream.
 
 ## Description
 
-Plasma is middleware for sending event specialized for stream. Plasma provides EventSource and gRPC Stream from the same endpoint.
+Plasma is middleware for sending event specialized for a stream. Plasma provides EventSource and gRPC Stream from the same endpoint.
 
 ## Installation
 
@@ -189,7 +189,7 @@ You publish events to the channel that Plasma subscribes according to the follow
 }
 ```
 
-[openfresh/plasma-go](https://github.com/openfresh/plasma-go) is a library that wraps publish a event to Redis.
+[openfresh/plasma-go](https://github.com/openfresh/plasma-go) is a library that wraps publish an event to Redis.
 
 ### ELB HealthCheck
 
