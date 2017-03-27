@@ -51,7 +51,7 @@ $ docker-compose up -d
 
 # Usage Subscriber
 
-## Usage Sever Side Event
+## Sever Side Event
 
 [Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 
@@ -115,7 +115,7 @@ When an event matching the subscribing event is published, an event is displayed
 
 You can publish events to Redis from this endpoint.  You need to enter valid JSON in EventData form.
 
-## Usage gRPC Stream
+## gRPC Stream
 
 You can subscribe to events using gRPC Stream.
 
@@ -161,12 +161,6 @@ func main() {
 }
 ```
 
-### Usage ELB HealthCheck
-
-Plasma supports the AWS Elastic Load Balancing health check.
-
-If an User-Agent starts with `ELB-HealthChecker/`, Plasma will check health.
-
 # Usage Publisher
 
 You publish events to the channel that Plasma subscribes according to the following JSON Schema.
@@ -197,6 +191,11 @@ You publish events to the channel that Plasma subscribes according to the follow
 
 [openfresh/plasma-go](https://github.com/openfresh/plasma-go) is a library that wraps publish a event to Redis.
 
+### ELB HealthCheck
+
+Plasma supports the AWS Elastic Load Balancing health check.
+
+If an User-Agent starts with `ELB-HealthChecker/`, Plasma will check health.
 
 ## Config
 
