@@ -36,12 +36,12 @@ type Config struct {
 	Debug      bool
 	Origin     string
 	Port       string `default:"8080"`
-	SSE        ServerSideEvent
+	SSE        ServerSentEvent
 	Subscriber Subscriber
 	TLS        Cert `envconfig:"TLS"`
 }
 
-type ServerSideEvent struct {
+type ServerSentEvent struct {
 	Retry      int    `default:"2000"`
 	EventQuery string `default:"eventType"`
 }
