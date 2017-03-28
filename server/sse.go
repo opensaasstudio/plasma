@@ -21,9 +21,9 @@ import (
 	"github.com/openfresh/plasma/pubsub"
 )
 
-func NewSSEServer(pb pubsub.PubSuber, accessLogger *zap.Logger, errorLogger *zap.Logger, config config.Config) *http.Server {
+func NewSSEServer(opt Option) *http.Server {
 	return &http.Server{
-		Handler: newHandler(pb, accessLogger, errorLogger, config),
+		Handler: newHandler(opt.PubSuber, opt.AccessLogger, opt.ErrorLogger, opt.Config),
 	}
 
 }

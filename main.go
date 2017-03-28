@@ -120,11 +120,23 @@ func main() {
 	}()
 
 	// For Native Client
+	grpcServerOption := server.Option{
+		PubSuber:     pubsuber,
+		AccessLogger: accessLogger,
+		ErrorLogger:  errorLogger,
+		Config:       config,
+	}
 	grpcServer := grpc.NewServer()
-	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(pubsuber, accessLogger, errorLogger, config))
+	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(grpcServerOption))
 
 	// For Web Front End
-	sseServer := server.NewSSEServer(pubsuber, accessLogger, errorLogger, config)
+	sseServerOption := server.Option{
+		PubSuber:     pubsuber,
+		AccessLogger: accessLogger,
+		ErrorLogger:  errorLogger,
+		Config:       config,
+	}
+	sseServer := server.NewSSEServer(sseServerOption)
 
 	// For AWS ELB
 	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
