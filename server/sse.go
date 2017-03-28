@@ -18,14 +18,14 @@ import (
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/manager"
+	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/pubsub"
 )
 
 func NewSSEServer(opt Option) *http.Server {
 	return &http.Server{
-		Handler: newHandler(opt.PubSuber, opt.AccessLogger, opt.ErrorLogger, opt.Config),
+		Handler: newHandler(opt),
 	}
-
 }
 
 type sseHandler struct {
@@ -41,21 +41,23 @@ type sseHandler struct {
 	errorLogger   *zap.Logger
 	config        config.Config
 	mux           *http.ServeMux
+	metrics       metrics.Metrics
 }
 
-func newHandler(pb pubsub.PubSuber, accessLogger *zap.Logger, errorLogger *zap.Logger, config config.Config) sseHandler {
+func newHandler(opt Option) sseHandler {
 	h := sseHandler{
 		clientManager: manager.NewClientManager(),
 		timer:         time.NewTicker(10 * time.Second),
 		newClients:    make(chan manager.Client),
 		removeClients: make(chan manager.Client),
 		payloads:      make(chan event.Payload),
-		pubsub:        pb,
-		retry:         config.SSE.Retry,
-		eventQuery:    config.SSE.EventQuery,
-		accessLogger:  accessLogger,
-		errorLogger:   errorLogger,
-		config:        config,
+		pubsub:        opt.PubSuber,
+		retry:         opt.Config.SSE.Retry,
+		eventQuery:    opt.Config.SSE.EventQuery,
+		accessLogger:  opt.AccessLogger,
+		errorLogger:   opt.ErrorLogger,
+		config:        opt.Config,
+		metrics:       opt.Metrics,
 	}
 	h.pubsub.Subscribe(func(payload event.Payload) {
 		h.payloads <- payload
@@ -80,8 +82,10 @@ func (h sseHandler) Run() {
 			select {
 			case client := <-h.newClients:
 				h.clientManager.AddClient(client)
+				h.metrics.IncClientCount()
 			case client := <-h.removeClients:
 				h.clientManager.RemoveClient(client)
+				h.metrics.DecClientCount()
 			case payload := <-h.payloads:
 				h.clientManager.SendPayload(payload)
 			case <-h.timer.C:

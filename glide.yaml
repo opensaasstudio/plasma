@@ -25,3 +25,4 @@ import:
 - package: golang.org/x/sync
   subpackages:
   - errgroup
+- package: github.com/rcrowley/go-metrics

@@ -6,6 +6,7 @@ import (
 
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/manager"
+	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/pkg/errors"
@@ -19,6 +20,7 @@ type StreamServer struct {
 	pubsub        pubsub.PubSuber
 	accessLogger  *zap.Logger
 	errorLogger   *zap.Logger
+	metrics       metrics.Metrics
 }
 
 func NewStreamServer(opt Option) *StreamServer {
@@ -30,6 +32,7 @@ func NewStreamServer(opt Option) *StreamServer {
 		pubsub:        opt.PubSuber,
 		accessLogger:  opt.AccessLogger,
 		errorLogger:   opt.ErrorLogger,
+		metrics:       opt.Metrics,
 	}
 	ss.pubsub.Subscribe(func(payload event.Payload) {
 		ss.payloads <- payload
@@ -45,8 +48,10 @@ func (ss *StreamServer) Run() {
 			select {
 			case client := <-ss.newClients:
 				ss.clientManager.AddClient(client)
+				ss.metrics.IncClientCount()
 			case client := <-ss.removeClients:
 				ss.clientManager.RemoveClient(client)
+				ss.metrics.DecClientCount()
 			case payload := <-ss.payloads:
 				ss.clientManager.SendPayload(payload)
 			}

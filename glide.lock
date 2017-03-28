@@ -1,5 +1,5 @@
-hash: 0810817c4eeac20498a9082df62c3b1afb7e896ae503c059b0d2e1a3c6879296
-updated: 2017-03-27T17:19:11.37876143+09:00
+hash: 02c09f1ac2afb245a06ef3eb26e2c1e2c9671f3d4e2308f5b93ac6d1b14a72e9
+updated: 2017-03-28T15:14:40.34029761+09:00
 imports:
 - name: github.com/golang/protobuf
   version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
@@ -13,6 +13,8 @@ imports:
   version: 07efe2b857fb8c02d2dd85c12d0145f58554ec7c
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/rcrowley/go-metrics
+  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/soheilhy/cmux
   version: bf4a8ede9e87c006fe1d4278c6c7f2b8be1fa84c
 - name: github.com/stretchr/testify
