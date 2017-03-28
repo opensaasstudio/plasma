@@ -8,35 +8,26 @@ import (
 	"github.com/openfresh/plasma/metrics"
 )
 
-func NewMetricsServer(config config.Config, metrics []metrics.Metrics) *http.Server {
+func NewMetricsServer(config config.Config, registry metrics.Registry) *http.Server {
 	return &http.Server{
-		Handler: newMetricsHandler(config, metrics),
+		Handler: newMetricsHandler(config, registry),
 	}
 
 }
 
 type metricsHandler struct {
-	config  config.Config
-	metrics []metrics.Metrics
+	config   config.Config
+	registry metrics.Registry
 }
 
-func newMetricsHandler(config config.Config, metrics []metrics.Metrics) metricsHandler {
+func newMetricsHandler(config config.Config, registry metrics.Registry) metricsHandler {
 	return metricsHandler{
-		config:  config,
-		metrics: metrics,
+		config:   config,
+		registry: registry,
 	}
-}
-
-type metricsResponse struct {
-	Clients int64 `json:"clients"`
 }
 
 func (mh metricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	metrics := metricsResponse{}
-	for _, m := range mh.metrics {
-		metrics.Clients += m.GetClientCount()
-	}
-	json.NewEncoder(w).Encode(metrics)
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(mh.registry)
 	return
 }

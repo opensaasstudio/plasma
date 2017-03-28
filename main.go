@@ -121,7 +121,7 @@ func main() {
 	}()
 
 	// For Native Client
-	grpcMetrics, err := metrics.New()
+	grpcMetrics, err := metrics.New(metrics.GRPC)
 	if err != nil {
 		errorLogger.Fatal("failed to create grpc metrics",
 			zap.Error(err),
@@ -138,7 +138,7 @@ func main() {
 	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(grpcServerOption))
 
 	// For Web Front End
-	sseMetrics, err := metrics.New()
+	sseMetrics, err := metrics.New(metrics.SSE)
 	if err != nil {
 		errorLogger.Fatal("failed to create sse metrics",
 			zap.Error(err),
@@ -157,10 +157,7 @@ func main() {
 	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
 
 	// For Metrics
-	metricsServer := server.NewMetricsServer(config, []metrics.Metrics{
-		grpcMetrics,
-		sseMetrics,
-	})
+	metricsServer := server.NewMetricsServer(config, metrics.GetRegistry())
 
 	// for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
