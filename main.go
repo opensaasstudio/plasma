@@ -139,7 +139,6 @@ func main() {
 		syscall.SIGTERM)
 	go func() {
 		<-sigCh
-		close(sigCh)
 
 		eg := errgroup.Group{}
 		eg.Go(func() error {
@@ -156,6 +155,12 @@ func main() {
 			return healthCheckServer.Shutdown(context.Background())
 		})
 		if err := eg.Wait(); err != nil {
+			opErr, ok := err.(*net.OpError)
+
+			// NOTE: Ignore errors that occur when closing the file descriptor because it is an assumed error.
+			if ok && opErr.Op == "close" {
+				return
+			}
 			errorLogger.Fatal("failed to shutdown gracefully",
 				zap.Error(err),
 			)
