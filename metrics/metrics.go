@@ -1,6 +1,11 @@
 package metrics
 
-import metrics "github.com/rcrowley/go-metrics"
+import (
+	"encoding/json"
+	"io"
+
+	metrics "github.com/rcrowley/go-metrics"
+)
 
 type Metrics struct {
 	registry metrics.Registry
@@ -29,4 +34,8 @@ func (m *Metrics) IncClientCount() {
 
 func (m *Metrics) DecClientCount() {
 	metrics.GetOrRegisterCounter(clientCounterName, m.registry).Dec(int64(1))
+}
+
+func (m *Metrics) WriteJSON(w io.Writer) {
+	json.NewEncoder(w).Encode(m.registry)
 }

@@ -156,6 +156,12 @@ func main() {
 	// For AWS ELB
 	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
 
+	// For Metrics
+	metricsServer := server.NewMetricsServer(config, []metrics.Metrics{
+		grpcMetrics,
+		sseMetrics,
+	})
+
 	// for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh,
@@ -203,6 +209,11 @@ func main() {
 		{
 			Serve:    healthCheckServer.Serve,
 			Listener: m.Match(ELBHealthCheckMatcher()),
+		},
+		{
+			Serve: metricsServer.Serve,
+			// TODO: Think about how to match metrics server
+			Listener: m.Match(cmux.HTTP1HeaderField("User-Agent", "metrics")),
 		},
 		{
 			Serve:    sseServer.Serve,
