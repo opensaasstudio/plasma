@@ -41,7 +41,12 @@ func TestGRPCEvents(t *testing.T) {
 
 	grpcServer := grpc.NewServer()
 	config := config.Config{Port: "8082"}
-	proto.RegisterStreamServiceServer(grpcServer, NewStreamServer(pb, logger, logger, config))
+	proto.RegisterStreamServiceServer(grpcServer, NewStreamServer(Option{
+		PubSuber:     pb,
+		AccessLogger: logger,
+		ErrorLogger:  logger,
+		Config:       config,
+	}))
 	l, err := net.Listen("tcp", ":"+config.Port)
 	require.NoError(err)
 	go grpcServer.Serve(l)

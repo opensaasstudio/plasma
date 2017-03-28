@@ -4,7 +4,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/manager"
 	"github.com/openfresh/plasma/protobuf"
@@ -22,15 +21,15 @@ type StreamServer struct {
 	errorLogger   *zap.Logger
 }
 
-func NewStreamServer(pubsub pubsub.PubSuber, accessLogger *zap.Logger, errorLogger *zap.Logger, config config.Config) *StreamServer {
+func NewStreamServer(opt Option) *StreamServer {
 	ss := &StreamServer{
 		clientManager: manager.NewClientManager(),
 		newClients:    make(chan manager.Client),
 		removeClients: make(chan manager.Client),
 		payloads:      make(chan event.Payload),
-		pubsub:        pubsub,
-		accessLogger:  accessLogger,
-		errorLogger:   errorLogger,
+		pubsub:        opt.PubSuber,
+		accessLogger:  opt.AccessLogger,
+		errorLogger:   opt.ErrorLogger,
 	}
 	ss.pubsub.Subscribe(func(payload event.Payload) {
 		ss.payloads <- payload
