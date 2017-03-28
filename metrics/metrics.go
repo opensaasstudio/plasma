@@ -36,6 +36,10 @@ func (m *Metrics) DecClientCount() {
 	metrics.GetOrRegisterCounter(clientCounterName, m.registry).Dec(int64(1))
 }
 
+func (m *Metrics) GetClientCount() int64 {
+	return metrics.GetOrRegisterCounter(clientCounterName, m.registry).Count()
+}
+
 func (m *Metrics) WriteJSON(w io.Writer) {
 	json.NewEncoder(w).Encode(m.registry)
 }

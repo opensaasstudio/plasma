@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/openfresh/plasma/config"
@@ -26,10 +27,16 @@ func newMetricsHandler(config config.Config, metrics []metrics.Metrics) metricsH
 	}
 }
 
+type metricsResponse struct {
+	Clients int64 `json:"clients"`
+}
+
 func (mh metricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	metrics := metricsResponse{}
 	for _, m := range mh.metrics {
-		m.WriteJSON(w)
+		metrics.Clients += m.GetClientCount()
 	}
+	json.NewEncoder(w).Encode(metrics)
 	w.WriteHeader(http.StatusOK)
 	return
 }
