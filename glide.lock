@@ -1,5 +1,5 @@
-hash: ccc86f324ad31bb61420514f5a7d05ed23d8e59106a685f606d9624082c3121d
-updated: 2017-03-23T17:58:27.359384593+09:00
+hash: 0810817c4eeac20498a9082df62c3b1afb7e896ae503c059b0d2e1a3c6879296
+updated: 2017-03-27T17:19:11.37876143+09:00
 imports:
 - name: github.com/golang/protobuf
   version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
@@ -41,6 +41,10 @@ imports:
   - internal/timeseries
   - lex/httplex
   - trace
+- name: golang.org/x/sync
+  version: 5a06fca2c336a4b2b2fcb45702e8c47621b2aa2c
+  subpackages:
+  - errgroup
 - name: google.golang.org/grpc
   version: cdee119ee21e61eef7093a41ba148fa83585e143
   subpackages:

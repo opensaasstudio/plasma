@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"golang.org/x/sync/errgroup"
 
 	"go.uber.org/zap"
 
@@ -122,6 +128,44 @@ func main() {
 
 	// For AWS ELB
 	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
+
+	// for graceful shutdown
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGKILL,
+		syscall.SIGQUIT,
+		syscall.SIGTERM)
+	go func() {
+		<-sigCh
+
+		eg := errgroup.Group{}
+		eg.Go(func() error {
+			errorLogger.Info("shutdown gRPC Server gracefully...")
+			grpcServer.GracefulStop()
+			return nil
+		})
+		eg.Go(func() error {
+			errorLogger.Info("shutdown sseServer gracefully...")
+			return sseServer.Shutdown(context.Background())
+		})
+		eg.Go(func() error {
+			errorLogger.Info("shutdown healthCheckServer gracefully...")
+			return healthCheckServer.Shutdown(context.Background())
+		})
+		if err := eg.Wait(); err != nil {
+			opErr, ok := err.(*net.OpError)
+
+			// NOTE: Ignore errors that occur when closing the file descriptor because it is an assumed error.
+			if ok && opErr.Op == "close" {
+				return
+			}
+			errorLogger.Fatal("failed to shutdown gracefully",
+				zap.Error(err),
+			)
+		}
+	}()
 
 	m := cmux.New(l)
 	services := []Service{
