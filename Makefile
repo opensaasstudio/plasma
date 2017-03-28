@@ -28,3 +28,6 @@ test: $(TARGET_SERIAL_PACKAGES)
 
 $(TARGET_SERIAL_PACKAGES): test-%:
 	go test $(BASE_PACKAGE)/$(*)
+
+gen-proto:
+		cd protobuf && protoc --go_out=plugins=grpc:. *.proto
