@@ -13,7 +13,7 @@ type Stats struct {
 	GoVersion    string `json:"go_version"`
 	GoOs         string `json:"go_os"`
 	GoArch       string `json:"go_arch"`
-	CpuNum       int    `json:"cpu_num"`
+	CPUNum       int    `json:"cpu_num"`
 	GoroutineNum int    `json:"goroutine_num"`
 	Gomaxprocs   int    `json:"gomaxprocs"`
 	CgoCallNum   int64  `json:"cgo_call_num"`
@@ -61,14 +61,14 @@ func (t *safeTime) set(tm time.Time) {
 	t.Time = tm
 }
 
-var nsInMs float64 = float64(time.Millisecond)
+var nsInMs = float64(time.Millisecond)
 
 // NOTE: The following three variables need to be changed to atomic
 var lastSampleTime safeTime
-var lastPauseNs uint64 = 0
-var lastNumGc uint32 = 0
+var lastPauseNs uint64
+var lastNumGc uint32
 
-var connections int64 = 0
+var connections int64
 
 func IncConnection() {
 	atomic.AddInt64(&connections, 1)
@@ -128,7 +128,7 @@ func GetStats() *Stats {
 		GoVersion:    runtime.Version(),
 		GoOs:         runtime.GOOS,
 		GoArch:       runtime.GOARCH,
-		CpuNum:       runtime.NumCPU(),
+		CPUNum:       runtime.NumCPU(),
 		GoroutineNum: runtime.NumGoroutine(),
 		Gomaxprocs:   runtime.GOMAXPROCS(0),
 		CgoCallNum:   runtime.NumCgoCall(),
