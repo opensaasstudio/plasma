@@ -64,7 +64,14 @@ func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber, origin string) sseHandler
 		},
 		Origin: origin,
 	}
-	handler := newHandler(pb, logger, logger, config)
+
+	opt := Option{
+		PubSuber:     pb,
+		AccessLogger: logger,
+		ErrorLogger:  logger,
+		Config:       config,
+	}
+	handler := newHandler(opt)
 
 	return handler
 }

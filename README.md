@@ -55,7 +55,7 @@ $ docker-compose up -d
 
 [Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 
-### GET /events
+Your can use SSE if you request with `Accept:text-stream` header.
 
 You request events that you want to subscribe to this endpoint. You can specify multiple events separated by commas.
 The query name can be set with the `EventQuery` environment variable．(default value of EventQuery is  `eventType` )．
@@ -63,7 +63,7 @@ The query name can be set with the `EventQuery` environment variable．(default 
 Here is a simple example using [Yaffle / EventSource] (https://github.com/Yaffle/EventSource).
 
 ```javascript
-    var source = new EventSource('//localhost:8080/events?eventType=program:1234:views,program:1234:poll,program:1234:annotation');
+    var source = new EventSource('//localhost:8080/?eventType=program:1234:views,program:1234:poll,program:1234:annotation');
     
     source.addEventListener("open", function(e) {
         console.log("open");
@@ -104,12 +104,7 @@ The JSON schema of data returned from Plasma is as follows.
 }
 ```
 
-If the `DEBUG` environment variable is enabled, you can access the next two endpoints.
-
-### GET /
-
-This sample subscribes to `program:1234:views,program:1234:poll,program:1234:annotation` events.
-When an event matching the subscribing event is published, an event is displayed on the page.
+If the `DEBUG` environment variable is enabled, you can access the debug endpoint.
 
 ### GET /debug
 
@@ -191,11 +186,50 @@ You publish events to the channel that Plasma subscribes according to the follow
 
 [openfresh/plasma-go](https://github.com/openfresh/plasma-go) is a library that wraps publish an event to Redis.
 
-### ELB HealthCheck
+## HealthCheck
 
-Plasma supports the AWS Elastic Load Balancing health check.
+### GET /hc
 
-If an User-Agent starts with `ELB-HealthChecker/`, Plasma will check health.
+You can do a health check. Check the status of Redis.
+If there is a problem it returns 500, and if there is no problem it returns 200.
+
+## Metrics
+
+### GET /metrics
+
+You can get metrics from this endpoint.
+
+The following metrics can be taken.
+
+| name                | type      | desc                                                                  |
+|---------------------|-----------|-----------------------------------------------------------------------|
+| go_version          | string    | version of go                                                         |
+| go_os               | string    | os                                                                    |
+| go_arch             | string    | arch                                                                  |
+| cpu_num             | int       | number of cpus                                                        |
+| goroutine_num       | int       | number of goroutines                                                  |
+| gomaxprocs          | int       | number of operating system threads                                    |
+| cgo_call_num        | int64     | number of cgo calls                                                   |
+| memory_alloc        | uint64    | bytes of allocated heap objects                                       |
+| memory_total_alloc  | uint64    | cumulative bytes allocated for heap objects                           |
+| memory_sys          | uint64    | total bytes of memory                                                 |
+| memory_lookups      | uint64    | number of pointer                                                     |
+| memory_mallocs      | uint64    | cumulative count of heap objects allocated                            |
+| memory_frees        | uint64    | cumulative count of heap objects freed                                |
+| memory_stack        | uint64    | bytes in stack spans                                                  |
+| heap_alloc          | uint64    | bytes of allocated heap objects                                       |
+| heap_sys            | uint64    | bytes of heap memory obtained                                         |
+| heap_idle           | uint64    | bytes in idle spans                                                   |
+| heap_inuse          | uint64    | bytes in in-use spans                                                 |
+| heap_released       | uint64    | bytes of physical memory returned to the OS                           |
+| heap_objects        | uint64    | number of allocated heap objects                                      |
+| gc_next             | uint64    | target heap size of the next GC cycle                                 |
+| gc_last             | uint64    | time the last garbage collection finished, as, nanoseconds since 1970 |
+| gc_num              | uint32    | number of completed GC cycles                                         |
+| gc_per_second       | float64   | GC per second                                                         |
+| gc_pause_per_second | float64   | GC pause per second                                                   |
+| gc_pause            | []float64 | GC pause                                                              |
+| connections         | int64     | number of connected clients                                           |
 
 ## Config
 

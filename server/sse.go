@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	redis "gopkg.in/redis.v5"
-
 	"go.uber.org/zap"
 
 	"encoding/json"
@@ -18,14 +16,14 @@ import (
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/manager"
+	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/pubsub"
 )
 
 func NewSSEServer(opt Option) *http.Server {
 	return &http.Server{
-		Handler: newHandler(opt.PubSuber, opt.AccessLogger, opt.ErrorLogger, opt.Config),
+		Handler: newHandler(opt),
 	}
-
 }
 
 type sseHandler struct {
@@ -43,31 +41,24 @@ type sseHandler struct {
 	mux           *http.ServeMux
 }
 
-func newHandler(pb pubsub.PubSuber, accessLogger *zap.Logger, errorLogger *zap.Logger, config config.Config) sseHandler {
+func newHandler(opt Option) sseHandler {
 	h := sseHandler{
 		clientManager: manager.NewClientManager(),
 		timer:         time.NewTicker(10 * time.Second),
 		newClients:    make(chan manager.Client),
 		removeClients: make(chan manager.Client),
 		payloads:      make(chan event.Payload),
-		pubsub:        pb,
-		retry:         config.SSE.Retry,
-		eventQuery:    config.SSE.EventQuery,
-		accessLogger:  accessLogger,
-		errorLogger:   errorLogger,
-		config:        config,
+		pubsub:        opt.PubSuber,
+		retry:         opt.Config.SSE.Retry,
+		eventQuery:    opt.Config.SSE.EventQuery,
+		accessLogger:  opt.AccessLogger,
+		errorLogger:   opt.ErrorLogger,
+		config:        opt.Config,
 	}
 	h.pubsub.Subscribe(func(payload event.Payload) {
 		h.payloads <- payload
 	})
 	h.Run()
-
-	h.mux = http.NewServeMux()
-	if h.config.Debug {
-		h.mux.HandleFunc("/", h.index)
-		h.mux.HandleFunc("/debug", h.debug)
-	}
-	h.mux.HandleFunc("/events", h.events)
 
 	return h
 }
@@ -80,8 +71,10 @@ func (h sseHandler) Run() {
 			select {
 			case client := <-h.newClients:
 				h.clientManager.AddClient(client)
+				metrics.IncConnection()
 			case client := <-h.removeClients:
 				h.clientManager.RemoveClient(client)
+				metrics.DecConnection()
 			case payload := <-h.payloads:
 				h.clientManager.SendPayload(payload)
 			case <-h.timer.C:
@@ -104,57 +97,6 @@ func isNotSupportSSE(u string) bool {
 	}
 
 	return false
-}
-
-func (h sseHandler) index(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/index.html")
-	return
-}
-
-func (h sseHandler) debug(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		http.ServeFile(w, r, "template/debug.html")
-		return
-	case http.MethodPost:
-		p := event.Payload{}
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			h.errorLogger.Info("failed to decode json in debug endpoint",
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		// publish to Redis for testing
-		redisConf := h.config.Subscriber.Redis
-		opt := &redis.Options{
-			Addr:     redisConf.Addr,
-			Password: redisConf.Password,
-			DB:       redisConf.DB,
-		}
-		b, err := json.Marshal(p)
-		if err != nil {
-			h.errorLogger.Error("failed to marshal json in debug endpoint",
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		client := redis.NewClient(opt)
-		channel := h.config.Subscriber.Redis.Channels[0]
-		if err := client.Publish(channel, string(b)).Err(); err != nil {
-			h.errorLogger.Error("failed to publlish to redis",
-				zap.Object("redis", redisConf),
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	return
 }
 
 func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
@@ -243,5 +185,5 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.accessLogger.Info("sse", log.HttpRequestToLogFields(r)...)
-	h.mux.ServeHTTP(w, r)
+	h.events(w, r)
 }
