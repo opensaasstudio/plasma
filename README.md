@@ -201,6 +201,35 @@ You can get metrics from this endpoint.
 
 The following metrics can be taken.
 
+| name                | type      | desc                                                                  |
+|---------------------|-----------|-----------------------------------------------------------------------|
+| go_version          | string    | version of go                                                         |
+| go_os               | string    | os                                                                    |
+| go_arch             | string    | arch                                                                  |
+| cpu_num             | int       | number of cpus                                                        |
+| goroutine_num       | int       | number of goroutines                                                  |
+| gomaxprocs          | int       | number of operating system threads                                    |
+| cgo_call_num        | int64     | number of cgo calls                                                   |
+| memory_alloc        | uint64    | bytes of allocated heap objects                                       |
+| memory_total_alloc  | uint64    | cumulative bytes allocated for heap objects                           |
+| memory_sys          | uint64    | total bytes of memory                                                 |
+| memory_lookups      | uint64    | number of pointer                                                     |
+| memory_mallocs      | uint64    | cumulative count of heap objects allocated                            |
+| memory_frees        | uint64    | cumulative count of heap objects freed                                |
+| memory_stack        | uint64    | bytes in stack spans                                                  |
+| heap_alloc          | uint64    | bytes of allocated heap objects                                       |
+| heap_sys            | uint64    | bytes of heap memory obtained                                         |
+| heap_idle           | uint64    | bytes in idle spans                                                   |
+| heap_inuse          | uint64    | bytes in in-use spans                                                 |
+| heap_released       | uint64    | bytes of physical memory returned to the OS                           |
+| heap_objects        | uint64    | number of allocated heap objects                                      |
+| gc_next             | uint64    | target heap size of the next GC cycle                                 |
+| gc_last             | uint64    | time the last garbage collection finished, as, nanoseconds since 1970 |
+| gc_num              | uint32    | number of completed GC cycles                                         |
+| gc_per_second       | float64   | GC per second                                                         |
+| gc_pause_per_second | float64   | GC pause per second                                                   |
+| gc_pause            | []float64 | GC pause                                                              |
+| connections         | int64     | number of connected clients                                           |
 
 ## Config
 
