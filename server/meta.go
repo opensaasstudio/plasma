@@ -41,7 +41,9 @@ func newMetaHandler(opt Option) metaHandler {
 		mux:             http.NewServeMux(),
 	}
 
-	h.mux.HandleFunc("/debug", h.debug)
+	if h.config.Debug {
+		h.mux.HandleFunc("/debug", h.debug)
+	}
 	h.mux.HandleFunc("/hc", h.healthCheck)
 	h.mux.HandleFunc("/metrics", h.metrics)
 
