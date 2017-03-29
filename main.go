@@ -14,7 +14,6 @@ import (
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
-	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
@@ -98,35 +97,21 @@ func main() {
 	}()
 
 	// For Native Client
-	grpcMetrics, err := metrics.New(metrics.GRPC)
-	if err != nil {
-		errorLogger.Fatal("failed to create grpc metrics",
-			zap.Error(err),
-		)
-	}
 	grpcServerOption := server.Option{
 		PubSuber:     pubsuber,
 		AccessLogger: accessLogger,
 		ErrorLogger:  errorLogger,
 		Config:       config,
-		Metrics:      grpcMetrics,
 	}
 	grpcServer := grpc.NewServer()
 	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(grpcServerOption))
 
 	// For Web Front End
-	sseMetrics, err := metrics.New(metrics.SSE)
-	if err != nil {
-		errorLogger.Fatal("failed to create sse metrics",
-			zap.Error(err),
-		)
-	}
 	sseServerOption := server.Option{
 		PubSuber:     pubsuber,
 		AccessLogger: accessLogger,
 		ErrorLogger:  errorLogger,
 		Config:       config,
-		Metrics:      sseMetrics,
 	}
 	sseServer := server.NewSSEServer(sseServerOption)
 
@@ -135,7 +120,6 @@ func main() {
 		AccessLogger: accessLogger,
 		ErrorLogger:  errorLogger,
 		Config:       config,
-		Registry:     metrics.GetRegistry(),
 	})
 
 	// for graceful shutdown

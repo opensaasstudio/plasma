@@ -39,7 +39,6 @@ type sseHandler struct {
 	errorLogger   *zap.Logger
 	config        config.Config
 	mux           *http.ServeMux
-	metrics       metrics.Metrics
 }
 
 func newHandler(opt Option) sseHandler {
@@ -55,7 +54,6 @@ func newHandler(opt Option) sseHandler {
 		accessLogger:  opt.AccessLogger,
 		errorLogger:   opt.ErrorLogger,
 		config:        opt.Config,
-		metrics:       opt.Metrics,
 	}
 	h.pubsub.Subscribe(func(payload event.Payload) {
 		h.payloads <- payload
@@ -73,10 +71,10 @@ func (h sseHandler) Run() {
 			select {
 			case client := <-h.newClients:
 				h.clientManager.AddClient(client)
-				h.metrics.IncClientCount()
+				metrics.IncConnection()
 			case client := <-h.removeClients:
 				h.clientManager.RemoveClient(client)
-				h.metrics.DecClientCount()
+				metrics.DecConnection()
 			case payload := <-h.payloads:
 				h.clientManager.SendPayload(payload)
 			case <-h.timer.C:

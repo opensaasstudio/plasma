@@ -11,7 +11,7 @@ import (
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/openfresh/plasma/metrics"
 )
 
 func NewMetaServer(opt Option) *http.Server {
@@ -21,11 +21,10 @@ func NewMetaServer(opt Option) *http.Server {
 }
 
 type metaHandler struct {
-	accessLogger    *zap.Logger
-	errorLogger     *zap.Logger
-	config          config.Config
-	metricsRegistry metrics.Registry
-	mux             *http.ServeMux
+	accessLogger *zap.Logger
+	errorLogger  *zap.Logger
+	config       config.Config
+	mux          *http.ServeMux
 }
 
 func (h metaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,11 +33,10 @@ func (h metaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func newMetaHandler(opt Option) metaHandler {
 	h := metaHandler{
-		accessLogger:    opt.AccessLogger,
-		errorLogger:     opt.ErrorLogger,
-		config:          opt.Config,
-		metricsRegistry: opt.Registry,
-		mux:             http.NewServeMux(),
+		accessLogger: opt.AccessLogger,
+		errorLogger:  opt.ErrorLogger,
+		config:       opt.Config,
+		mux:          http.NewServeMux(),
 	}
 
 	if h.config.Debug {
@@ -127,5 +125,5 @@ func (h *metaHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *metaHandler) metrics(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(h.metricsRegistry)
+	metrics.HTTPHandler(w, r)
 }

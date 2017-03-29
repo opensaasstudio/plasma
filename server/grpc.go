@@ -20,7 +20,6 @@ type StreamServer struct {
 	pubsub        pubsub.PubSuber
 	accessLogger  *zap.Logger
 	errorLogger   *zap.Logger
-	metrics       metrics.Metrics
 }
 
 func NewStreamServer(opt Option) *StreamServer {
@@ -32,7 +31,6 @@ func NewStreamServer(opt Option) *StreamServer {
 		pubsub:        opt.PubSuber,
 		accessLogger:  opt.AccessLogger,
 		errorLogger:   opt.ErrorLogger,
-		metrics:       opt.Metrics,
 	}
 	ss.pubsub.Subscribe(func(payload event.Payload) {
 		ss.payloads <- payload
@@ -48,10 +46,10 @@ func (ss *StreamServer) Run() {
 			select {
 			case client := <-ss.newClients:
 				ss.clientManager.AddClient(client)
-				ss.metrics.IncClientCount()
+				metrics.IncConnection()
 			case client := <-ss.removeClients:
 				ss.clientManager.RemoveClient(client)
-				ss.metrics.DecClientCount()
+				metrics.DecConnection()
 			case payload := <-ss.payloads:
 				ss.clientManager.SendPayload(payload)
 			}
