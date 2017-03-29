@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,11 +11,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"go.uber.org/zap"
-
-	"bufio"
-	"io"
-
-	"strings"
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
@@ -32,23 +26,6 @@ import (
 type Service struct {
 	Serve    func(l net.Listener) error
 	Listener net.Listener
-}
-
-const ELBHealthCheckUserAgent = "ELB-HealthChecker/"
-
-func ELBHealthCheckMatcher() cmux.Matcher {
-	return func(r io.Reader) bool {
-		req, err := http.ReadRequest(bufio.NewReader(r))
-		if err != nil {
-			return false
-		}
-		userAgent := req.Header.Get("User-Agent")
-		if strings.Contains(userAgent, ELBHealthCheckUserAgent) {
-			return true
-		}
-
-		return false
-	}
 }
 
 func plasmaListener(logger *zap.Logger, config config.Config) net.Listener {
@@ -153,11 +130,13 @@ func main() {
 	}
 	sseServer := server.NewSSEServer(sseServerOption)
 
-	// For AWS ELB
-	healthCheckServer := server.NewHealthCheckServer(accessLogger, errorLogger, config)
-
-	// For Metrics
-	metricsServer := server.NewMetricsServer(config, metrics.GetRegistry())
+	// For Meta (HealthCheck, Metrics)
+	metaServer := server.NewMetaServer(server.Option{
+		AccessLogger: accessLogger,
+		ErrorLogger:  errorLogger,
+		Config:       config,
+		Registry:     metrics.GetRegistry(),
+	})
 
 	// for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -181,8 +160,8 @@ func main() {
 			return sseServer.Shutdown(context.Background())
 		})
 		eg.Go(func() error {
-			errorLogger.Info("shutdown healthCheckServer gracefully...")
-			return healthCheckServer.Shutdown(context.Background())
+			errorLogger.Info("shutdown metaServer gracefully...")
+			return metaServer.Shutdown(context.Background())
 		})
 		if err := eg.Wait(); err != nil {
 			opErr, ok := err.(*net.OpError)
@@ -204,16 +183,11 @@ func main() {
 			Listener: m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc")),
 		},
 		{
-			Serve:    healthCheckServer.Serve,
-			Listener: m.Match(ELBHealthCheckMatcher()),
-		},
-		{
-			Serve: metricsServer.Serve,
-			// TODO: Think about how to match metrics server
-			Listener: m.Match(cmux.HTTP1HeaderField("User-Agent", "metrics")),
-		},
-		{
 			Serve:    sseServer.Serve,
+			Listener: m.Match(cmux.HTTP1HeaderField("Accept", "text/event-stream")),
+		},
+		{
+			Serve:    metaServer.Serve,
 			Listener: m.Match(cmux.HTTP1()),
 		},
 	}

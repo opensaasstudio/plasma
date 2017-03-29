@@ -76,14 +76,18 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		handler := newHealthCheckHandler(l, l, config.Config{
-			Subscriber: config.Subscriber{
-				Type:  "redis",
-				Redis: c.Redis,
+		handler := newMetaHandler(Option{
+			AccessLogger: l,
+			ErrorLogger:  l,
+			Config: config.Config{
+				Subscriber: config.Subscriber{
+					Type:  "redis",
+					Redis: c.Redis,
+				},
 			},
 		})
 
-		req, err := http.NewRequest("GET", "/", nil)
+		req, err := http.NewRequest("GET", "/hc", nil)
 		assert.Nil(err)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	redis "gopkg.in/redis.v5"
-
 	"go.uber.org/zap"
 
 	"encoding/json"
@@ -64,13 +62,6 @@ func newHandler(opt Option) sseHandler {
 	})
 	h.Run()
 
-	h.mux = http.NewServeMux()
-	if h.config.Debug {
-		h.mux.HandleFunc("/", h.index)
-		h.mux.HandleFunc("/debug", h.debug)
-	}
-	h.mux.HandleFunc("/events", h.events)
-
 	return h
 }
 
@@ -108,57 +99,6 @@ func isNotSupportSSE(u string) bool {
 	}
 
 	return false
-}
-
-func (h sseHandler) index(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/index.html")
-	return
-}
-
-func (h sseHandler) debug(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		http.ServeFile(w, r, "template/debug.html")
-		return
-	case http.MethodPost:
-		p := event.Payload{}
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			h.errorLogger.Info("failed to decode json in debug endpoint",
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		// publish to Redis for testing
-		redisConf := h.config.Subscriber.Redis
-		opt := &redis.Options{
-			Addr:     redisConf.Addr,
-			Password: redisConf.Password,
-			DB:       redisConf.DB,
-		}
-		b, err := json.Marshal(p)
-		if err != nil {
-			h.errorLogger.Error("failed to marshal json in debug endpoint",
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		client := redis.NewClient(opt)
-		channel := h.config.Subscriber.Redis.Channels[0]
-		if err := client.Publish(channel, string(b)).Err(); err != nil {
-			h.errorLogger.Error("failed to publlish to redis",
-				zap.Object("redis", redisConf),
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	return
 }
 
 func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
@@ -247,5 +187,5 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.accessLogger.Info("sse", log.HttpRequestToLogFields(r)...)
-	h.mux.ServeHTTP(w, r)
+	h.events(w, r)
 }

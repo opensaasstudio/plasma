@@ -13,4 +13,5 @@ type Option struct {
 	ErrorLogger  *zap.Logger
 	Config       config.Config
 	Metrics      metrics.Metrics
+	Registry     metrics.Registry
 }
