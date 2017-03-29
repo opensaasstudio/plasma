@@ -41,7 +41,6 @@ func newMetaHandler(opt Option) metaHandler {
 		mux:             http.NewServeMux(),
 	}
 
-	h.mux.HandleFunc("/", h.index)
 	h.mux.HandleFunc("/debug", h.debug)
 	h.mux.HandleFunc("/hc", h.healthCheck)
 	h.mux.HandleFunc("/metrics", h.metrics)
@@ -61,11 +60,6 @@ func checkRedis(config config.Redis) error {
 		return err
 	}
 	return nil
-}
-
-func (h *metaHandler) index(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/index.html")
-	return
 }
 
 func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
