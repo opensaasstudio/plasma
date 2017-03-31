@@ -56,6 +56,6 @@ func HttpRequestToLogFields(r *http.Request) []zapcore.Field {
 		zap.Int64("content-length", r.ContentLength),
 		zap.String("host", r.Host),
 		zap.String("method", r.Method),
-		zap.String("remote-addr", r.RemoteAddr),
+		zap.String("remote-addr", remoteAddr),
 	}
 }
