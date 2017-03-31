@@ -46,6 +46,10 @@ func NewLogger(config config.Log) (*zap.Logger, error) {
 }
 
 func HttpRequestToLogFields(r *http.Request) []zapcore.Field {
+	remoteAddr := r.RemoteAddr
+	if addr := r.Header.Get("X-Forwarded-For"); addr != "" {
+		remoteAddr = addr
+	}
 	return []zapcore.Field{
 		zap.String("user-agent", r.UserAgent()),
 		zap.String("referer", r.Referer()),
