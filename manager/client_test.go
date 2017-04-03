@@ -6,8 +6,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
+	"github.com/openfresh/plasma/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAddClient(t *testing.T) {
@@ -18,7 +21,11 @@ func TestAddClient(t *testing.T) {
 			Test: NewClient([]string{"program:1234:poll"}),
 		},
 	}
-	cm := NewClientManager(nil)
+	l, err := log.NewLogger(config.Log{Out: "discard"})
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cm := NewClientManager(l)
 
 	eventCnt := 0
 	for _, c := range cases {
@@ -54,7 +61,11 @@ func TestRemoveClient(t *testing.T) {
 			}),
 		},
 	}
-	cm := NewClientManager(nil)
+	l, err := log.NewLogger(config.Log{Out: "discard"})
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cm := NewClientManager(l)
 
 	eventSet := make(map[string]struct{})
 	for _, c := range cases {
@@ -103,7 +114,11 @@ func TestCreateEvents(t *testing.T) {
 		},
 	}
 
-	cm := NewClientManager(nil)
+	l, err := log.NewLogger(config.Log{Out: "discard"})
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cm := NewClientManager(l)
 	assert := assert.New(t)
 
 	for _, c := range cases {
@@ -116,7 +131,11 @@ func TestCreateEvents(t *testing.T) {
 func TestSendPayload(t *testing.T) {
 	assert := assert.New(t)
 
-	cm := NewClientManager(nil)
+	l, err := log.NewLogger(config.Log{Out: "discard"})
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cm := NewClientManager(l)
 	clients := []Client{
 		NewClient([]string{"program:1234"}),
 		NewClient([]string{"program:1234:views"}),
@@ -162,7 +181,11 @@ func TestSendPayload(t *testing.T) {
 func TestSendHeartBeat(t *testing.T) {
 	assert := assert.New(t)
 
-	cm := NewClientManager(nil)
+	l, err := log.NewLogger(config.Log{Out: "discard"})
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cm := NewClientManager(l)
 	clients := []Client{
 		NewClient([]string{heartBeatEvent, "program:1234"}),
 		NewClient([]string{heartBeatEvent, "program:1234:views"}),

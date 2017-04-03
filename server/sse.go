@@ -43,7 +43,7 @@ type sseHandler struct {
 
 func newHandler(opt Option) sseHandler {
 	h := sseHandler{
-		clientManager: manager.NewClientManager(nil),
+		clientManager: manager.NewClientManager(opt.ErrorLogger),
 		timer:         time.NewTicker(10 * time.Second),
 		newClients:    make(chan manager.Client),
 		removeClients: make(chan manager.Client),
