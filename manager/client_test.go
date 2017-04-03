@@ -18,7 +18,7 @@ func TestAddClient(t *testing.T) {
 			Test: NewClient([]string{"program:1234:poll"}),
 		},
 	}
-	cm := NewClientManager()
+	cm := NewClientManager(nil)
 
 	eventCnt := 0
 	for _, c := range cases {
@@ -54,7 +54,7 @@ func TestRemoveClient(t *testing.T) {
 			}),
 		},
 	}
-	cm := NewClientManager()
+	cm := NewClientManager(nil)
 
 	eventSet := make(map[string]struct{})
 	for _, c := range cases {
@@ -103,7 +103,7 @@ func TestCreateEvents(t *testing.T) {
 		},
 	}
 
-	cm := NewClientManager()
+	cm := NewClientManager(nil)
 	assert := assert.New(t)
 
 	for _, c := range cases {
@@ -116,7 +116,7 @@ func TestCreateEvents(t *testing.T) {
 func TestSendPayload(t *testing.T) {
 	assert := assert.New(t)
 
-	cm := NewClientManager()
+	cm := NewClientManager(nil)
 	clients := []Client{
 		NewClient([]string{"program:1234"}),
 		NewClient([]string{"program:1234:views"}),
@@ -162,7 +162,7 @@ func TestSendPayload(t *testing.T) {
 func TestSendHeartBeat(t *testing.T) {
 	assert := assert.New(t)
 
-	cm := NewClientManager()
+	cm := NewClientManager(nil)
 	clients := []Client{
 		NewClient([]string{heartBeatEvent, "program:1234"}),
 		NewClient([]string{heartBeatEvent, "program:1234:views"}),

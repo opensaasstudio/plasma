@@ -3,6 +3,9 @@ package manager
 import (
 	"strings"
 	"sync"
+	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/openfresh/plasma/event"
 )
@@ -30,6 +33,7 @@ type Clients struct {
 
 type ClientManager struct {
 	clientsTable map[string]Clients
+	errorLogger  *zap.Logger
 }
 
 func (cm *ClientManager) AddClient(client Client) {
@@ -76,6 +80,11 @@ func (cm *ClientManager) createEvents(request string) []string {
 }
 
 func (cm *ClientManager) SendPayload(payload event.Payload) {
+	id := time.Now().UnixNano()
+	cm.errorLogger.Debug("DEBUG: Before SendPayload in ClientManager",
+		zap.Int64("id", id),
+		zap.Int64("now", time.Now().UnixNano()),
+	)
 	for _, event := range cm.createEvents(payload.Meta.Type) {
 		clientsTable, ok := cm.clientsTable[event]
 		if !ok {
@@ -88,6 +97,10 @@ func (cm *ClientManager) SendPayload(payload event.Payload) {
 			client <- payload
 		}
 	}
+	cm.errorLogger.Debug("DEBUG: After SendPayload in ClientManager",
+		zap.Int64("id", id),
+		zap.Int64("now", time.Now().UnixNano()),
+	)
 }
 
 const heartBeatEvent = "heartbeat"
@@ -105,8 +118,9 @@ func (cm *ClientManager) SendHeartBeat() {
 	}
 }
 
-func NewClientManager() *ClientManager {
+func NewClientManager(errorLogger *zap.Logger) *ClientManager {
 	return &ClientManager{
 		clientsTable: make(map[string]Clients),
+		errorLogger:  errorLogger,
 	}
 }

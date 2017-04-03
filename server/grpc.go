@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -24,7 +26,7 @@ type StreamServer struct {
 
 func NewStreamServer(opt Option) *StreamServer {
 	ss := &StreamServer{
-		clientManager: manager.NewClientManager(),
+		clientManager: manager.NewClientManager(opt.ErrorLogger),
 		newClients:    make(chan manager.Client),
 		removeClients: make(chan manager.Client),
 		payloads:      make(chan event.Payload),
@@ -51,7 +53,16 @@ func (ss *StreamServer) Run() {
 				ss.clientManager.RemoveClient(client)
 				metrics.DecConnection()
 			case payload := <-ss.payloads:
+				id := time.Now().UnixNano()
+				ss.errorLogger.Debug("DEBUG: before send payload in client manager",
+					zap.Int64("id", id),
+					zap.Int64("time", time.Now().UnixNano()),
+				)
 				ss.clientManager.SendPayload(payload)
+				ss.errorLogger.Debug("DEBUG: after send payload in client manager",
+					zap.Int64("id", id),
+					zap.Int64("time", time.Now().UnixNano()),
+				)
 			}
 		}
 	}()
@@ -85,6 +96,11 @@ func (ss *StreamServer) Events(request *proto.Request, es proto.StreamService_Ev
 			if !open {
 				return nil
 			}
+			id := time.Now().UnixNano()
+			ss.errorLogger.Debug("DEBUG: Before ReceivePayload",
+				zap.Int64("id", id),
+				zap.Int64("time", time.Now().UnixNano()),
+			)
 			eventType := proto.EventType{pl.Meta.Type}
 			p := &proto.Payload{
 				EventType: &eventType,
@@ -98,6 +114,10 @@ func (ss *StreamServer) Events(request *proto.Request, es proto.StreamService_Ev
 				ss.removeClients <- client
 				return err
 			}
+			ss.errorLogger.Debug("DEBUG: After ReceivePayload",
+				zap.Int64("id", id),
+				zap.Int64("time", time.Now().UnixNano()),
+			)
 		case <-es.Context().Done():
 			ss.removeClients <- client
 			return nil

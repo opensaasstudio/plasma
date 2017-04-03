@@ -128,6 +128,10 @@ func (r *Redis) Subscribe() error {
 			}
 		}
 
+		id := time.Now().UnixNano()
+		r.errorLogger.Debug("DEBUG: receive message",
+			zap.Int64("id", id),
+			zap.Int64("time", time.Now().UnixNano()))
 		var payload event.Payload
 		if err := json.Unmarshal([]byte(msg.Payload), &payload); err != nil {
 			r.errorLogger.Info("failed to unmarhsal to json when subscribing redis",
@@ -137,6 +141,12 @@ func (r *Redis) Subscribe() error {
 			)
 			continue
 		}
+		r.errorLogger.Debug("DEBUG: unmarhsal message",
+			zap.Int64("id", id),
+			zap.Int64("time", time.Now().UnixNano()))
 		r.pubsub.Publish(payload)
+		r.errorLogger.Debug("DEBUG: publish message",
+			zap.Int64("id", id),
+			zap.Int64("time", time.Now().UnixNano()))
 	}
 }
