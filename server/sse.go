@@ -103,7 +103,7 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 	eventRequestsQuery, ok := r.URL.Query()[h.eventQuery]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		return
+		return http.StatusBadRequest
 	}
 	lastEvnetID := 0
 	if id := r.Header.Get("HTTP_LAST_EVENT_ID"); id != "" {
