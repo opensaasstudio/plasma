@@ -76,18 +76,31 @@ func (cm *ClientManager) createEvents(request string) []string {
 }
 
 func (cm *ClientManager) SendPayload(payload event.Payload) {
-	for _, event := range cm.createEvents(payload.Meta.Type) {
-		clientsTable, ok := cm.clientsTable[event]
-		if !ok {
-			continue
-		}
-		clientsTable.mu.RLock()
-		clients := clientsTable.clients
-		clientsTable.mu.RUnlock()
-		for client := range clients {
-			client <- payload
-		}
+	events := cm.createEvents(payload.Meta.Type)
+	wg := sync.WaitGroup{}
+	for _, e := range events {
+		wg.Add(1)
+		go func(e string) {
+			defer wg.Done()
+			clientsTable, ok := cm.clientsTable[e]
+			if !ok {
+				return
+			}
+			clientsTable.mu.RLock()
+			clients := clientsTable.clients
+			clientsTable.mu.RUnlock()
+			wg2 := sync.WaitGroup{}
+			for client := range clients {
+				wg2.Add(1)
+				go func(client chan event.Payload) {
+					defer wg2.Done()
+					client <- payload
+				}(client)
+			}
+			wg2.Wait()
+		}(e)
 	}
+	wg.Wait()
 }
 
 const heartBeatEvent = "heartbeat"
