@@ -99,7 +99,7 @@ func isNotSupportSSE(u string) bool {
 	return false
 }
 
-func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
+func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 	eventRequestsQuery, ok := r.URL.Query()[h.eventQuery]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -119,12 +119,12 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 	f, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "not streaming support", http.StatusInternalServerError)
-		return
+		return http.StatusBadRequest
 	}
 
 	if len(eventRequestsQuery) == 0 || eventRequestsQuery[0] == "" {
 		http.Error(w, "event query can't be empty", http.StatusBadRequest)
-		return
+		return http.StatusBadRequest
 	}
 
 	// NOTE: eventRequestQuery[0] ex) 'program:1234:poll,program:1234:views'
@@ -152,7 +152,7 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 		select {
 		case pl, open := <-client.ReceivePayload():
 			if !open {
-				return
+				return http.StatusInternalServerError
 			}
 			eventType := pl.Meta.Type
 			if eventType == heartBeatEvent {
@@ -177,13 +177,15 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 			lastEvnetID++
 		case <-notify:
 			h.removeClients <- client
-			return
+			return http.StatusOK
 		}
 	}
 
 }
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.accessLogger.Info("sse", log.HTTPRequestToLogFields(r)...)
-	h.events(w, r)
+	status := h.events(w, r)
+
+	fileds := append(log.HTTPRequestToLogFields(r), zap.Int("status", status))
+	h.accessLogger.Info("sse", fileds...)
 }

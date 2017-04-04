@@ -109,19 +109,21 @@ func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *metaHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
-	h.accessLogger.Info("healthCheck", log.HTTPRequestToLogFields(r)...)
+	status := http.StatusOK
 	if h.config.Subscriber.Type == "redis" {
 		if err := checkRedis(h.config.Subscriber.Redis); err != nil {
 			h.errorLogger.Error("failed to connect redis",
 				zap.Error(err),
 				zap.Object("redis", h.config.Subscriber.Redis),
 			)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			status = http.StatusInternalServerError
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
+
+	fields := append(log.HTTPRequestToLogFields(r), zap.Int("status", status))
+	h.accessLogger.Info("healthCheck", fields...)
 }
 
 func (h *metaHandler) metrics(w http.ResponseWriter, r *http.Request) {
