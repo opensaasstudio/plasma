@@ -184,6 +184,6 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.accessLogger.Info("sse", log.HttpRequestToLogFields(r)...)
+	h.accessLogger.Info("sse", log.HTTPRequestToLogFields(r)...)
 	h.events(w, r)
 }

@@ -109,7 +109,7 @@ func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *metaHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
-	h.accessLogger.Info("healthCheck", log.HttpRequestToLogFields(r)...)
+	h.accessLogger.Info("healthCheck", log.HTTPRequestToLogFields(r)...)
 	if h.config.Subscriber.Type == "redis" {
 		if err := checkRedis(h.config.Subscriber.Redis); err != nil {
 			h.errorLogger.Error("failed to connect redis",
