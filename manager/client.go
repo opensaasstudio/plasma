@@ -113,7 +113,7 @@ func (cm *ClientManager) SendHeartBeat() {
 	clients.mu.RLock()
 	c := clients.clients
 	clients.mu.RUnlock()
-	for send, _ := range c {
+	for send := range c {
 		send <- event.Payload{Meta: event.MetaData{Type: heartBeatEvent}}
 	}
 }
