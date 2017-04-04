@@ -45,7 +45,7 @@ func NewLogger(config config.Log) (*zap.Logger, error) {
 	return logger, nil
 }
 
-func HttpRequestToLogFields(r *http.Request) []zapcore.Field {
+func HTTPRequestToLogFields(r *http.Request) []zapcore.Field {
 	remoteAddr := r.RemoteAddr
 	if addr := r.Header.Get("X-Forwarded-For"); addr != "" {
 		remoteAddr = addr
