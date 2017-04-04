@@ -11,10 +11,11 @@ plasma
 
 plasma is event push middleware by using gRPC stream.
 
-
 ## Description
 
 Plasma is middleware for sending event specialized for a stream. Plasma provides EventSource and gRPC Stream from the same endpoint.
+
+![img](img/plasma_diagram.png)
 
 ## Installation
 
