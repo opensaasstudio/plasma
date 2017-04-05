@@ -86,13 +86,11 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 }
 
 func (m *Metrics) Start() {
-	ticker := time.NewTicker(m.config.Interval)
-	defer ticker.Stop()
-
 	go func() {
-		<-ticker.C
-		s := GetStats()
-		m.update(s)
+		for _ = range time.Tick(m.config.Interval) {
+			s := GetStats()
+			m.update(s)
+		}
 	}()
 
 	go m.sender.Send()

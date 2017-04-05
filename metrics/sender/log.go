@@ -18,7 +18,9 @@ type logSender struct {
 }
 
 func newLogSender(config config.LogMetrics) (logSender, error) {
-	sender := logSender{}
+	sender := logSender{
+		config: config,
+	}
 
 	var writer io.Writer
 
