@@ -102,7 +102,7 @@ func isNotSupportSSE(u string) bool {
 func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 	eventRequestsQuery, ok := r.URL.Query()[h.eventQuery]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "specify event queries", http.StatusBadRequest)
 		return http.StatusBadRequest
 	}
 	lastEvnetID := 0
@@ -152,6 +152,7 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 		select {
 		case pl, open := <-client.ReceivePayload():
 			if !open {
+				http.Error(w, "can't receive a payload", http.StatusInternalServerError)
 				return http.StatusInternalServerError
 			}
 			eventType := pl.Meta.Type
@@ -177,6 +178,7 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 			lastEvnetID++
 		case <-notify:
 			h.removeClients <- client
+			w.WriteHeader(http.StatusOK)
 			return http.StatusOK
 		}
 	}
