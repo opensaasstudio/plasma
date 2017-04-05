@@ -1,74 +1,16 @@
 package metrics
 
 import (
-	"fmt"
-	"io"
-	"log"
-	"os"
 	"time"
 
 	"github.com/openfresh/plasma/config"
-	"github.com/pkg/errors"
+	"github.com/openfresh/plasma/metrics/sender"
 	metrics "github.com/rcrowley/go-metrics"
 )
 
-const (
-	Log = "log"
-)
-
-type metricsSender interface {
-	Send()
-}
-
-type logSender struct {
-	logger metrics.Logger
-	config config.LogMetrics
-}
-
-func newLogSender(config config.LogMetrics) (logSender, error) {
-	sender := logSender{}
-
-	var writer io.Writer
-
-	switch config.Out {
-	case "stdout":
-		writer = os.Stdout
-	case "stderr":
-		writer = os.Stderr
-	default:
-		w, err := os.OpenFile(config.Out, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-		if err != nil {
-			return sender, errors.Wrapf(err, "failed to open file: %s", config.Out)
-		}
-		writer = w
-	}
-
-	sender.logger = log.New(writer, config.Prefix, config.Flag)
-
-	return sender, nil
-}
-
-func (s logSender) Send() {
-	metrics.Log(metrics.DefaultRegistry, s.config.Interval, s.logger)
-}
-
-func newMetricsSender(config config.Metrics) (metricsSender, error) {
-	var metricsSender metricsSender
-	var err error
-
-	switch config.Type {
-	case Log:
-		metricsSender, err = newLogSender(config.Log)
-	default:
-		err = errors.New(fmt.Sprintf("unkown metrics sender type: %s", config.Type))
-	}
-
-	return metricsSender, err
-}
-
 type Metrics struct {
 	config config.Metrics
-	sender metricsSender
+	sender sender.MetricsSender
 
 	GcLast metrics.Gauge
 	GcNext metrics.Gauge
@@ -134,7 +76,7 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 	metrics.Register("StackInUse", m.StackInUse)
 	metrics.Register("Connections", m.Connections)
 
-	sender, err := newMetricsSender(m.config)
+	sender, err := sender.NewMetricsSender(m.config)
 	if err != nil {
 		return m, err
 	}
