@@ -120,6 +120,7 @@ type Cert struct {
 type Metrics struct {
 	Type     string
 	Log      LogMetrics
+	Syslog   SyslogMetrics
 	Interval time.Duration `default:"10s"`
 }
 
@@ -127,5 +128,11 @@ type LogMetrics struct {
 	Out      string        `default:"stdout"`
 	Prefix   string        `default:"metrics"`
 	Flag     int           `default:"4"`
+	Interval time.Duration `default:"1m"`
+}
+
+type SyslogMetrics struct {
+	Priority int           `default:"6"`
+	Tag      string        `default:"plasma"`
 	Interval time.Duration `default:"1m"`
 }

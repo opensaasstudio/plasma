@@ -17,6 +17,8 @@ func NewMetricsSender(config config.Metrics) (MetricsSender, error) {
 	switch config.Type {
 	case Log:
 		metricsSender, err = newLogSender(config.Log)
+	case Syslog:
+		metricsSender, err = newSyslogSender(config.Syslog)
 	default:
 		err = fmt.Errorf("unkown metrics sender type: %s", config.Type)
 	}
