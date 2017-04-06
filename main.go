@@ -106,6 +106,7 @@ func main() {
 			)
 		}
 		metrics.Start()
+		defer metrics.Stop()
 	}
 
 	// For Native Client

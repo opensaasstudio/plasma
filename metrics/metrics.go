@@ -9,6 +9,7 @@ import (
 )
 
 type Metrics struct {
+	ticker *time.Ticker
 	config config.Metrics
 	sender sender.MetricsSender
 
@@ -81,19 +82,24 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 		return m, err
 	}
 	m.sender = sender
+	m.ticker = time.NewTicker(m.config.Interval)
 
 	return m, nil
 }
 
 func (m *Metrics) Start() {
 	go func() {
-		for _ = range time.Tick(m.config.Interval) {
+		for _ = range m.ticker.C {
 			s := GetStats()
 			m.update(s)
 		}
 	}()
 
 	go m.sender.Send()
+}
+
+func (m *Metrics) Stop() {
+	m.ticker.Stop()
 }
 
 func (m *Metrics) update(s *Stats) {
