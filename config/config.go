@@ -39,6 +39,7 @@ type Config struct {
 	SSE        ServerSentEvent
 	Subscriber Subscriber
 	TLS        Cert `envconfig:"TLS"`
+	Metrics    Metrics
 }
 
 type ServerSentEvent struct {
@@ -114,4 +115,27 @@ type Log struct {
 type Cert struct {
 	CertFile string `envconfig:"CERT_FILE"`
 	KeyFile  string `envconfig:"KEY_FILE"`
+}
+
+type Metrics struct {
+	Type     string
+	Log      LogMetrics
+	Syslog   SyslogMetrics
+	Interval time.Duration `default:"10s"`
+}
+
+type LogMetrics struct {
+	Out      string        `default:"stdout"`
+	Prefix   string        `default:"metrics"`
+	Flag     int           `default:"4"`
+	Interval time.Duration `default:"1m"`
+}
+
+type SyslogMetrics struct {
+	Tag      string        `default:"plasma"`
+	Interval time.Duration `default:"1m"`
+	Severity int           `default:"6"`
+	Facility int
+	Network  string
+	Addr     string
 }
