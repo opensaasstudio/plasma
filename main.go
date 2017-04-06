@@ -14,6 +14,7 @@ import (
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
+	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
@@ -95,6 +96,18 @@ func main() {
 			)
 		}
 	}()
+
+	// Start Metrics
+	if config.Metrics.Type != "" {
+		metrics, err := metrics.NewMetrics(config)
+		if err != nil {
+			errorLogger.Fatal("failed to create metrics",
+				zap.Error(err),
+			)
+		}
+		metrics.Start()
+		defer metrics.Stop()
+	}
 
 	// For Native Client
 	grpcServerOption := server.Option{
