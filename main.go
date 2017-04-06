@@ -1,12 +1,13 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/net/context"
 
 	"golang.org/x/sync/errgroup"
 
@@ -15,12 +16,10 @@ import (
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/metrics"
-	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
 	"github.com/openfresh/plasma/subscriber"
 	"github.com/soheilhy/cmux"
-	"google.golang.org/grpc"
 )
 
 type Service struct {
@@ -116,8 +115,7 @@ func main() {
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	}
-	grpcServer := grpc.NewServer()
-	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(grpcServerOption))
+	grpcServer := server.NewGRPCServer(grpcServerOption)
 
 	// For Web Front End
 	sseServerOption := server.Option{

@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
+
+	"google.golang.org/grpc"
 
 	"github.com/pkg/errors"
 
@@ -45,6 +48,20 @@ func NewLogger(config config.Log) (*zap.Logger, error) {
 	return logger, nil
 }
 
+func GRPCRequestToLogFields(info *grpc.StreamServerInfo, start time.Time, err error) []zapcore.Field {
+	errCode := grpc.Code(err)
+	errDesc := grpc.ErrorDesc(err)
+	duration := time.Since(start)
+
+	return []zapcore.Field{
+		zap.String("status", errCode.String()),
+		zap.Uint32("code", uint32(errCode)),
+		zap.String("error", errDesc),
+		zap.Int64("duration", duration.Nanoseconds()/int64(time.Millisecond)),
+		zap.String("time", time.Now().Format(time.RFC3339)),
+	}
+}
+
 func HTTPRequestToLogFields(r *http.Request) []zapcore.Field {
 	remoteAddr := r.RemoteAddr
 	if addr := r.Header.Get("X-Forwarded-For"); addr != "" {
@@ -57,5 +74,6 @@ func HTTPRequestToLogFields(r *http.Request) []zapcore.Field {
 		zap.String("host", r.Host),
 		zap.String("method", r.Method),
 		zap.String("remote-addr", remoteAddr),
+		zap.String("time", time.Now().Format(time.RFC3339Nano)),
 	}
 }
