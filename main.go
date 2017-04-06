@@ -9,15 +9,12 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/grpc"
-
 	"golang.org/x/sync/errgroup"
 
 	"go.uber.org/zap"
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
-	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
 	"github.com/openfresh/plasma/subscriber"
@@ -105,10 +102,7 @@ func main() {
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	}
-	grpcServer := grpc.NewServer(
-		grpc.StreamInterceptor(log.StreamAccessLogHandler),
-	)
-	proto.RegisterStreamServiceServer(grpcServer, server.NewStreamServer(grpcServerOption))
+	grpcServer := server.NewGRPCServer(grpcServerOption)
 
 	// For Web Front End
 	sseServerOption := server.Option{

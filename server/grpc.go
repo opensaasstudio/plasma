@@ -1,16 +1,51 @@
 package server
 
 import (
+	"time"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 
+	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
+	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/manager"
 	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/pkg/errors"
 )
+
+type GRPCServer struct {
+	*grpc.Server
+	accessLogger *zap.Logger
+	errorLogger  *zap.Logger
+	config       config.Config
+}
+
+func (s *GRPCServer) StreamAccessLogHandler(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	start := time.Now()
+	err := handler(srv, ss)
+	fields := log.GRPCRequestToLogFields(info, start, err)
+
+	s.accessLogger.Info("grpc", fields...)
+
+	return err
+}
+
+func NewGRPCServer(opt Option) *GRPCServer {
+	gs := &GRPCServer{
+		accessLogger: opt.AccessLogger,
+		errorLogger:  opt.ErrorLogger,
+		config:       opt.Config,
+	}
+	gs.Server = grpc.NewServer(grpc.StreamInterceptor(gs.StreamAccessLogHandler))
+
+	proto.RegisterStreamServiceServer(gs.Server, NewStreamServer(opt))
+
+	return gs
+}
 
 type StreamServer struct {
 	clientManager *manager.ClientManager

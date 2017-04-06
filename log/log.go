@@ -48,18 +48,7 @@ func NewLogger(config config.Log) (*zap.Logger, error) {
 	return logger, nil
 }
 
-func StreamAccessLogHandler(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	start := time.Now()
-	err := handler(srv, ss)
-	fields := gRPCRequestToLogFields(info, start, err)
-
-	// TODO: logging to accesslogger
-	var _ = fields
-
-	return err
-}
-
-func gRPCRequestToLogFields(info *grpc.StreamServerInfo, start time.Time, err error) []zapcore.Field {
+func GRPCRequestToLogFields(info *grpc.StreamServerInfo, start time.Time, err error) []zapcore.Field {
 	errCode := grpc.Code(err)
 	errDesc := grpc.ErrorDesc(err)
 	duration := time.Since(start)
