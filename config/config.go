@@ -132,7 +132,10 @@ type LogMetrics struct {
 }
 
 type SyslogMetrics struct {
-	Priority int           `default:"6"`
 	Tag      string        `default:"plasma"`
 	Interval time.Duration `default:"1m"`
+	Severity int           `default:"6"`
+	Facility int
+	Network  string
+	Addr     string
 }

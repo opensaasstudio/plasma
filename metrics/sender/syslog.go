@@ -19,8 +19,10 @@ func newSyslogSender(config config.SyslogMetrics) (syslogSender, error) {
 		config: config,
 	}
 
-	priority := syslog.Priority(sender.config.Priority)
-	writer, err := syslog.New(priority, sender.config.Tag)
+	c := sender.config
+
+	priority := syslog.Priority(c.Severity | c.Facility)
+	writer, err := syslog.Dial(c.Network, c.Addr, priority, c.Tag)
 	if err != nil {
 		return sender, err
 	}
