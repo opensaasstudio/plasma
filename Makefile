@@ -4,7 +4,7 @@ VERSION=$(shell git rev-parse --verify HEAD)
 SERIAL_PACKAGES= \
 		 manager \
 		 pubsub \
-     server \
+		 server \
 		 subscriber
 TARGET_SERIAL_PACKAGES=$(addprefix test-,$(SERIAL_PACKAGES))
 
@@ -27,7 +27,7 @@ build:
 test: $(TARGET_SERIAL_PACKAGES)
 
 $(TARGET_SERIAL_PACKAGES): test-%:
-	go test $(BASE_PACKAGE)/$(*)
+		go test $(BASE_PACKAGE)/$(*)
 
 gen-proto:
 		cd protobuf && protoc --go_out=plugins=grpc:. *.proto
