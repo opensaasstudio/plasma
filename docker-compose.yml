@@ -1,21 +1,25 @@
-plasma:
-  image: openfresh/plasma:latest
-  ports:
-    - 8080:8080
-  environment:
-    PLASMA_DEBUG: true
-    PLASMA_SUBSCRIBER_TYPE: redis
-    PLASMA_SUBSCRIBER_REDIS_ADDR: redis:6379
-    PLASMA_SUBSCRIBER_REDIS_CHANNELS: plasma
-    PLASMA_SUBSCRIBER_REDIS_OVER_MAX_RETRY_BEHAVIOR: alive
-    PLASMA_SUBSCRIBER_REDIS_MAX_RETRY: 5
-    PLASMA_SUBSCRIBER_REDIS_TIMEOUT: 1s
-    PLASMA_SUBSCRIBER_REDIS_RETRY_INTERBAL: 5s
-    PLASMA_ORIGIN: "*"
-  links:
-    - redis
-redis:
-  image: redis:3.2.8-alpine
-  ports:
-    - 6379:6379
+version: "3"
+
+services:
+  plasma:
+    container_name: plasma 
+    image: openfresh/plasma:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+    environment:
+      PLASMA_DEBUG: "true"
+      PLASMA_SUBSCRIBER_TYPE: redis
+      PLASMA_SUBSCRIBER_REDIS_ADDR: redis:6379
+      PLASMA_SUBSCRIBER_REDIS_CHANNELS: plasma
+      PLASMA_SUBSCRIBER_REDIS_OVER_MAX_RETRY_BEHAVIOR: alive
+      PLASMA_SUBSCRIBER_REDIS_MAX_RETRY: 5
+      PLASMA_SUBSCRIBER_REDIS_TIMEOUT: 1s
+      PLASMA_SUBSCRIBER_REDIS_RETRY_INTERBAL: 5s
+      PLASMA_ORIGIN: "*"
+
+  redis:
+    container_name: plasma_redis
+    image: redis:3.2.8-alpine
 
