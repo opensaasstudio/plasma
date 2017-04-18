@@ -9,7 +9,7 @@ SERIAL_PACKAGES= \
 TARGET_SERIAL_PACKAGES=$(addprefix test-,$(SERIAL_PACKAGES))
 
 install-go:
-		sh util/go.sh 1.8
+		sh util/go.sh 1.8.1
 
 install-glide:
 		sh util/glide.sh v0.12.3
