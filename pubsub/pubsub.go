@@ -1,8 +1,8 @@
 package pubsub
 
 import (
-	"github.com/openfresh/plasma/event"
 	"github.com/mattn/go-pubsub"
+	"github.com/openfresh/plasma/event"
 )
 
 type PubSuber interface {

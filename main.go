@@ -135,12 +135,13 @@ func main() {
 
 	// for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh,
+	signal.Notify(
+		sigCh,
 		syscall.SIGHUP,
 		syscall.SIGINT,
-		syscall.SIGKILL,
 		syscall.SIGQUIT,
-		syscall.SIGTERM)
+		syscall.SIGTERM,
+	)
 	go func() {
 		<-sigCh
 
@@ -188,8 +189,18 @@ func main() {
 	}
 
 	for _, service := range services {
-		go service.Serve(service.Listener)
+		go func(service Service) {
+			if err := service.Serve(service.Listener); err != nil {
+				errorLogger.Fatal("failed to serve",
+					zap.Error(err),
+				)
+			}
+		}(service)
 	}
 
-	m.Serve()
+	if err := m.Serve(); err != nil {
+		errorLogger.Fatal("failed to serve",
+			zap.Error(err),
+		)
+	}
 }

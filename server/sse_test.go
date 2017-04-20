@@ -86,19 +86,19 @@ func TestSSEHandler(t *testing.T) {
 	defer server.Close()
 
 	events := []event.Payload{
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:poll",
 			},
 			Data: json.RawMessage(`{"poll": {"1": "One", "2": "Two", "3": "Three"}}`),
 		},
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:annotation",
 			},
 			Data: json.RawMessage(`{"text": "hello world"}`),
 		},
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:views",
 			},
@@ -159,11 +159,11 @@ func TestSSEHandler(t *testing.T) {
 			eventReq := strings.Join(c.events, ",")
 			url := fmt.Sprintf("%s/events?eventType=%s", server.URL, eventReq)
 			resp, err := http.Get(url)
-			defer resp.Body.Close()
 			require.NoError(t, err)
+			defer resp.Body.Close()
 
 			isFirst := true
-			for cases[i].expectCount != cases[i].actualCount {
+			for c.expectCount != c.actualCount {
 				data := readData(t, resp.Body)
 				if len(data) == 0 {
 					continue
@@ -190,7 +190,7 @@ func TestSSEHandler(t *testing.T) {
 				}
 
 				assert.True(flag)
-				cases[i].actualCount++
+				c.actualCount++
 
 				assert.Equal(resp.Header.Get("Access-Control-Allow-Origin"), origin)
 

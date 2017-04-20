@@ -38,7 +38,6 @@ type sseHandler struct {
 	accessLogger  *zap.Logger
 	errorLogger   *zap.Logger
 	config        config.Config
-	mux           *http.ServeMux
 }
 
 func newHandler(opt Option) sseHandler {

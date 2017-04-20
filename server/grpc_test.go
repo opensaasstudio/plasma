@@ -24,7 +24,7 @@ import (
 )
 
 func eventType(et string) *proto.EventType {
-	return &proto.EventType{et}
+	return &proto.EventType{Type: et}
 }
 
 func TestGRPCEvents(t *testing.T) {
@@ -51,19 +51,19 @@ func TestGRPCEvents(t *testing.T) {
 	go grpcServer.Serve(l)
 
 	events := []event.Payload{
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:poll",
 			},
 			Data: json.RawMessage(`{"poll": {"1": "One", "2": "Two", "3": "Three"}}`),
 		},
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:views",
 			},
 			Data: json.RawMessage(`{"views": 55301}`),
 		},
-		event.Payload{
+		{
 			Meta: event.MetaData{
 				Type: "program:1234:annotation",
 			},
@@ -133,7 +133,7 @@ func TestGRPCEvents(t *testing.T) {
 			ss, err := client.Events(ctx, &c.req)
 			require.NoError(err)
 			isFirst := true
-			for cases[i].expectCount != cases[i].actualCount {
+			for c.expectCount != c.actualCount {
 				resp, err := ss.Recv()
 				require.NoError(err)
 
@@ -154,7 +154,7 @@ func TestGRPCEvents(t *testing.T) {
 					}
 				}
 				assert.True(flag)
-				cases[i].actualCount++
+				c.actualCount++
 				js := make(map[string]interface{})
 				isJSON := json.Unmarshal([]byte(resp.Data), &js) == nil
 				assert.True(isJSON)

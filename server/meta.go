@@ -56,10 +56,7 @@ func checkRedis(config config.Redis) error {
 		DB:       config.DB,
 	}
 	client := redis.NewClient(opt)
-	if err := client.Ping().Err(); err != nil {
-		return err
-	}
-	return nil
+	return client.Ping().Err()
 }
 
 func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {

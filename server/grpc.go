@@ -120,7 +120,7 @@ func (ss *StreamServer) Events(request *proto.Request, es proto.StreamService_Ev
 			if !open {
 				return nil
 			}
-			eventType := proto.EventType{pl.Meta.Type}
+			eventType := proto.EventType{Type: pl.Meta.Type}
 			p := &proto.Payload{
 				EventType: &eventType,
 				Data:      string(pl.Data),
@@ -139,6 +139,4 @@ func (ss *StreamServer) Events(request *proto.Request, es proto.StreamService_Ev
 		}
 
 	}
-
-	return nil
 }

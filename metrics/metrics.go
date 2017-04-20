@@ -59,23 +59,57 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 		Connections:      metrics.NewGauge(),
 	}
 
-	metrics.Register("GcLast", m.GcLast)
-	metrics.Register("GcNext", m.GcNext)
-	metrics.Register("GcNum", m.GcNum)
-	metrics.Register("GcPausePerSecond", m.GcPausePerSecond)
-	metrics.Register("GoroutineNum", m.GoroutineNum)
-	metrics.Register("HeapAlloc", m.HeapAlloc)
-	metrics.Register("HeapIdle", m.HeapIdle)
-	metrics.Register("HeapInuse", m.HeapInuse)
-	metrics.Register("HeapObjects", m.HeapObjects)
-	metrics.Register("HeapSys", m.HeapSys)
-	metrics.Register("MemoryAlloc", m.MemoryAlloc)
-	metrics.Register("MemoryFrees", m.MemoryFrees)
-	metrics.Register("MemoryLookups", m.MemoryLookups)
-	metrics.Register("MemoryMallocs", m.MemoryMallocs)
-	metrics.Register("MemorySys", m.MemorySys)
-	metrics.Register("StackInUse", m.StackInUse)
-	metrics.Register("Connections", m.Connections)
+	if err := metrics.Register("GcLast", m.GcLast); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("GcNext", m.GcNext); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("GcNum", m.GcNum); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("GcPausePerSecond", m.GcPausePerSecond); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("GoroutineNum", m.GoroutineNum); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("HeapAlloc", m.HeapAlloc); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("HeapIdle", m.HeapIdle); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("HeapInuse", m.HeapInuse); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("HeapObjects", m.HeapObjects); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("HeapSys", m.HeapSys); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("MemoryAlloc", m.MemoryAlloc); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("MemoryFrees", m.MemoryFrees); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("MemoryLookups", m.MemoryLookups); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("MemoryMallocs", m.MemoryMallocs); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("MemorySys", m.MemorySys); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("StackInUse", m.StackInUse); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("Connections", m.Connections); err != nil {
+		return m, err
+	}
 
 	sender, err := sender.NewMetricsSender(m.config)
 	if err != nil {
@@ -89,7 +123,7 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 
 func (m *Metrics) Start() {
 	go func() {
-		for _ = range m.ticker.C {
+		for range m.ticker.C {
 			s := GetStats()
 			m.update(s)
 		}
