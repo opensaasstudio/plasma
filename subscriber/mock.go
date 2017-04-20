@@ -52,13 +52,9 @@ func (m *Mock) Subscribe() error {
 	t := time.NewTicker(m.config.Subscriber.Mock.Interval)
 	defer t.Stop()
 
-	for {
-		select {
-		case <-t.C:
-			payload := genFakeEventPayload()
-			m.pubsub.Publish(payload)
-		}
+	for range t.C {
+		payload := genFakeEventPayload()
+		m.pubsub.Publish(payload)
 	}
-
 	return nil
 }

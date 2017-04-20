@@ -83,8 +83,10 @@ func (b *OverMaxRetryBehavior) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var OverMaxRetryBehaviorAlive = "alive"
-var OverMaxRetryBehaviorDie = "die"
+const (
+	OverMaxRetryBehaviorAlive = "alive"
+	OverMaxRetryBehaviorDie   = "die"
+)
 
 type Redis struct {
 	Addr                 string `default:"localhost:6379"`
@@ -101,10 +103,7 @@ func (r Redis) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("Addr", r.Addr)
 	enc.AddString("Password", r.Password)
 	enc.AddInt("DB", r.DB)
-	if err := enc.AddArray("Channels", r.Channels); err != nil {
-		return err
-	}
-	return nil
+	return enc.AddArray("Channels", r.Channels)
 }
 
 type Log struct {

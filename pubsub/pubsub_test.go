@@ -26,6 +26,6 @@ func TestPubSub(t *testing.T) {
 	f := func(payload event.Payload) {
 		assert.Equal(t, p, payload, "should be equal")
 	}
-	pb.Subscribe(f)
+	assert.NoError(t, pb.Subscribe(f))
 	pb.Publish(p)
 }
