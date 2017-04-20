@@ -117,23 +117,19 @@ func TestGRPCEvents(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	var readyClient int32
-	for i, c := range cases {
+	for i := range cases {
 		wg.Add(1)
-		go func(i int, c struct {
-			req         proto.Request
-			expectCount int
-			actualCount int
-		}) {
+		go func(i int) {
 			defer wg.Done()
 			conn, err := grpc.Dial(":"+config.Port, grpc.WithInsecure(), grpc.WithTimeout(5*time.Second))
 			require.NoError(err)
 			defer conn.Close()
 			client := proto.NewStreamServiceClient(conn)
 			ctx := context.Background()
-			ss, err := client.Events(ctx, &c.req)
+			ss, err := client.Events(ctx, &cases[i].req)
 			require.NoError(err)
 			isFirst := true
-			for c.expectCount != c.actualCount {
+			for cases[i].expectCount != cases[i].actualCount {
 				resp, err := ss.Recv()
 				require.NoError(err)
 
@@ -147,19 +143,19 @@ func TestGRPCEvents(t *testing.T) {
 				}
 
 				flag := false
-				for _, e := range c.req.Events {
+				for _, e := range cases[i].req.Events {
 					if strings.HasPrefix(resp.GetEventType().GetType(), e.GetType()) {
 						flag = true
 						break
 					}
 				}
 				assert.True(flag)
-				c.actualCount++
+				cases[i].actualCount++
 				js := make(map[string]interface{})
 				isJSON := json.Unmarshal([]byte(resp.Data), &js) == nil
 				assert.True(isJSON)
 			}
-		}(i, c)
+		}(i)
 	}
 
 	// keep sending dummy messages until all clients are ready to receive messages

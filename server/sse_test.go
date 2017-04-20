@@ -146,24 +146,20 @@ func TestSSEHandler(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	var readyClient int32
-	for i, c := range cases {
+	for i := range cases {
 		wg.Add(1)
-		go func(i int, c struct {
-			events      []string
-			expectCount int
-			actualCount int
-		}) {
+		go func(i int) {
 			defer wg.Done()
 
 			// create request
-			eventReq := strings.Join(c.events, ",")
+			eventReq := strings.Join(cases[i].events, ",")
 			url := fmt.Sprintf("%s/events?eventType=%s", server.URL, eventReq)
 			resp, err := http.Get(url)
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
 			isFirst := true
-			for c.expectCount != c.actualCount {
+			for cases[i].expectCount != cases[i].actualCount {
 				data := readData(t, resp.Body)
 				if len(data) == 0 {
 					continue
@@ -182,7 +178,7 @@ func TestSSEHandler(t *testing.T) {
 				}
 
 				flag := false
-				for _, e := range c.events {
+				for _, e := range cases[i].events {
 					if strings.HasPrefix(p.Meta.Type, e) {
 						flag = true
 						break
@@ -190,7 +186,7 @@ func TestSSEHandler(t *testing.T) {
 				}
 
 				assert.True(flag)
-				c.actualCount++
+				cases[i].actualCount++
 
 				assert.Equal(resp.Header.Get("Access-Control-Allow-Origin"), origin)
 
@@ -199,7 +195,7 @@ func TestSSEHandler(t *testing.T) {
 				assert.True(isJSON)
 			}
 
-		}(i, c)
+		}(i)
 	}
 
 	// keep sending dummy messages until all clients are ready to receive messages
