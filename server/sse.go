@@ -20,12 +20,6 @@ import (
 	"github.com/openfresh/plasma/pubsub"
 )
 
-func NewSSEServer(opt Option) *http.Server {
-	return &http.Server{
-		Handler: newHandler(opt),
-	}
-}
-
 type sseHandler struct {
 	clientManager *manager.ClientManager
 	timer         *time.Ticker
@@ -40,7 +34,7 @@ type sseHandler struct {
 	config        config.Config
 }
 
-func newHandler(opt Option) sseHandler {
+func NewSSEHandler(opt Option) sseHandler {
 	h := sseHandler{
 		clientManager: manager.NewClientManager(),
 		timer:         time.NewTicker(10 * time.Second),

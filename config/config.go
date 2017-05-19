@@ -36,6 +36,7 @@ type Config struct {
 	Debug      bool
 	Origin     string
 	Port       string `default:"8080"`
+	GrpcPort   string `default:"50051"`
 	SSE        ServerSentEvent
 	Subscriber Subscriber
 	TLS        Cert `envconfig:"TLS"`

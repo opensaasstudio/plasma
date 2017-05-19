@@ -76,7 +76,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		handler := newMetaHandler(Option{
+		handler := NewMetaHandler(Option{
 			AccessLogger: l,
 			ErrorLogger:  l,
 			Config: config.Config{
