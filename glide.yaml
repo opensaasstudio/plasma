@@ -11,8 +11,6 @@ import:
 - package: github.com/pkg/errors
   version: ^0.8.0
 - package: github.com/rcrowley/go-metrics
-- package: github.com/soheilhy/cmux
-  version: 0068a46c9c22b4cd1aef5b063a9a47f473826d52
 - package: go.uber.org/zap
   version: ^1.0.0
   subpackages:

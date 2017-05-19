@@ -15,6 +15,7 @@ import (
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/credentials"
 )
 
 type GRPCServer struct {
@@ -34,17 +35,30 @@ func (s *GRPCServer) StreamAccessLogHandler(srv interface{}, ss grpc.ServerStrea
 	return err
 }
 
-func NewGRPCServer(opt Option) *GRPCServer {
+func NewGRPCServer(opt Option) (*GRPCServer, error) {
 	gs := &GRPCServer{
 		accessLogger: opt.AccessLogger,
 		errorLogger:  opt.ErrorLogger,
 		config:       opt.Config,
 	}
-	gs.Server = grpc.NewServer(grpc.StreamInterceptor(gs.StreamAccessLogHandler))
+
+	opts := make([]grpc.ServerOption, 0)
+
+	tls := opt.Config.TLS
+	if tls.CertFile != "" && tls.KeyFile != "" {
+		creds, err := credentials.NewServerTLSFromFile(tls.CertFile, tls.KeyFile)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, grpc.Creds(creds))
+	}
+
+	opts = append(opts, grpc.StreamInterceptor(gs.StreamAccessLogHandler))
+	gs.Server = grpc.NewServer(opts...)
 
 	proto.RegisterStreamServiceServer(gs.Server, NewStreamServer(opt))
 
-	return gs
+	return gs, nil
 }
 
 type StreamServer struct {

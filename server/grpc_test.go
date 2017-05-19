@@ -40,12 +40,14 @@ func TestGRPCEvents(t *testing.T) {
 	require.NoError(err)
 
 	config := config.Config{Port: "8082"}
-	grpcServer := NewGRPCServer(Option{
+	grpcServer, err := NewGRPCServer(Option{
 		PubSuber:     pb,
 		AccessLogger: logger,
 		ErrorLogger:  logger,
 		Config:       config,
 	})
+	require.NoError(err)
+
 	l, err := net.Listen("tcp", ":"+config.Port)
 	require.NoError(err)
 	go grpcServer.Serve(l)

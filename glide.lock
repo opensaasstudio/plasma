@@ -1,5 +1,5 @@
-hash: 372a7e58b4ec1ec6441b95a341f37035012205a8ef7048d6b56326b76fc73c19
-updated: 2017-05-07T18:14:22.00552573+09:00
+hash: bea123a9adafdd81b72bbe45711b296c12c128e70ed0e18477e960aea126cb59
+updated: 2017-05-20T00:41:47.512136265+09:00
 imports:
 - name: github.com/golang/protobuf
   version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
@@ -16,12 +16,10 @@ imports:
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
-- name: github.com/soheilhy/cmux
-  version: 0068a46c9c22b4cd1aef5b063a9a47f473826d52
 - name: go.uber.org/atomic
   version: 4e336646b2ef9fc6e47be8e21594178f98e5ebcf
 - name: go.uber.org/zap
-  version: 6a4e056f2cc954cfec3581729e758909604b3f76
+  version: fab453050a7a08c35f31fc5fff6f2dbd962285ab
   subpackages:
   - buffer
   - internal/bufferpool

@@ -19,18 +19,13 @@ import (
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
 	"github.com/openfresh/plasma/subscriber"
-	"github.com/soheilhy/cmux"
+	"net/http"
 )
 
-type Service struct {
-	Serve    func(l net.Listener) error
-	Listener net.Listener
-}
-
-func plasmaListener(logger *zap.Logger, config config.Config) net.Listener {
+func httpListener(logger *zap.Logger, config config.Config) net.Listener {
 	l, err := net.Listen("tcp", ":"+config.Port)
 	if err != nil {
-		logger.Fatal("failed to listen",
+		logger.Fatal("failed to http(https) listen",
 			zap.Error(err),
 			zap.String("port", config.Port),
 		)
@@ -59,6 +54,17 @@ func plasmaListener(logger *zap.Logger, config config.Config) net.Listener {
 	return l
 }
 
+func grpcListener(logger *zap.Logger, config config.Config) net.Listener {
+	l, err := net.Listen("tcp", ":"+config.GrpcPort)
+	if err != nil {
+		logger.Fatal("failed to grpc listen",
+			zap.Error(err),
+			zap.String("grpc-port", config.GrpcPort),
+		)
+	}
+	return l
+}
+
 func main() {
 	config := config.New()
 
@@ -71,8 +77,10 @@ func main() {
 		panic(err)
 	}
 
-	l := plasmaListener(errorLogger, config)
+	l := httpListener(errorLogger, config)
 	defer l.Close()
+	gl := grpcListener(errorLogger, config)
+	defer gl.Close()
 
 	pubsuber := pubsub.NewPubSub()
 
@@ -115,7 +123,13 @@ func main() {
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	}
-	grpcServer := server.NewGRPCServer(grpcServerOption)
+
+	grpcServer, err := server.NewGRPCServer(grpcServerOption)
+	if err != nil {
+		errorLogger.Fatal("failed to create gRPC server",
+			zap.Error(err),
+		)
+	}
 
 	// For Web Front End
 	sseServerOption := server.Option{
@@ -124,14 +138,25 @@ func main() {
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	}
-	sseServer := server.NewSSEServer(sseServerOption)
+	sseHandler := server.NewSSEHandler(sseServerOption)
 
 	// For Meta (HealthCheck, Metrics)
-	metaServer := server.NewMetaServer(server.Option{
+	metaHandler := server.NewMetaHandler(server.Option{
 		AccessLogger: accessLogger,
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	})
+
+	httpServer := &http.Server{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			accept := r.Header.Get("Accept")
+			if accept == "text/event-stream" {
+				sseHandler.ServeHTTP(w, r)
+			} else {
+				metaHandler.ServeHTTP(w, r)
+			}
+		}),
+	}
 
 	// for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -152,12 +177,8 @@ func main() {
 			return nil
 		})
 		eg.Go(func() error {
-			errorLogger.Info("shutdown sseServer gracefully...")
-			return sseServer.Shutdown(context.Background())
-		})
-		eg.Go(func() error {
-			errorLogger.Info("shutdown metaServer gracefully...")
-			return metaServer.Shutdown(context.Background())
+			errorLogger.Info("shutdown httpServer gracefully...")
+			return httpServer.Shutdown(context.Background())
 		})
 		if err := eg.Wait(); err != nil {
 			opErr, ok := err.(*net.OpError)
@@ -172,35 +193,18 @@ func main() {
 		}
 	}()
 
-	m := cmux.New(l)
-	services := []Service{
-		{
-			Serve:    grpcServer.Serve,
-			Listener: m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc")),
-		},
-		{
-			Serve:    sseServer.Serve,
-			Listener: m.Match(cmux.HTTP1HeaderField("Accept", "text/event-stream")),
-		},
-		{
-			Serve:    metaServer.Serve,
-			Listener: m.Match(cmux.HTTP1()),
-		},
-	}
+	go func() {
+		if err := grpcServer.Serve(gl); err != nil {
+			errorLogger.Fatal("failed to gRPC serve",
+				zap.Error(err),
+			)
+		}
+	}()
 
-	for _, service := range services {
-		go func(service Service) {
-			if err := service.Serve(service.Listener); err != nil {
-				errorLogger.Fatal("failed to serve",
-					zap.Error(err),
-				)
-			}
-		}(service)
-	}
-
-	if err := m.Serve(); err != nil {
-		errorLogger.Fatal("failed to serve",
+	if err := httpServer.Serve(l); err != nil {
+		errorLogger.Fatal("failed to HTTP serve",
 			zap.Error(err),
 		)
 	}
+
 }

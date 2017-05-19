@@ -14,12 +14,6 @@ import (
 	"github.com/openfresh/plasma/metrics"
 )
 
-func NewMetaServer(opt Option) *http.Server {
-	return &http.Server{
-		Handler: newMetaHandler(opt),
-	}
-}
-
 type metaHandler struct {
 	accessLogger *zap.Logger
 	errorLogger  *zap.Logger
@@ -31,7 +25,7 @@ func (h metaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
 
-func newMetaHandler(opt Option) metaHandler {
+func NewMetaHandler(opt Option) metaHandler {
 	h := metaHandler{
 		accessLogger: opt.AccessLogger,
 		errorLogger:  opt.ErrorLogger,
