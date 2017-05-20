@@ -2,10 +2,10 @@ version: "3"
 
 services:
   plasma:
-    container_name: plasma 
     image: openfresh/plasma:latest
     ports:
       - 8080:8080
+      - 50051:50051
     depends_on:
       - redis
     environment:
@@ -20,6 +20,5 @@ services:
       PLASMA_ORIGIN: "*"
 
   redis:
-    container_name: plasma_redis
     image: redis:3.2.8-alpine
 
