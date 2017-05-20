@@ -37,7 +37,7 @@ The binary is generated under the `bin/` directory.
 You can also use the Docker image.
 
 ```bash
-$ docker run -p 8080:8080 openfresh/plasma
+$ docker run -p 8080:8080 -p 50051:50051 openfresh/plasma
 ```
 
 ### Using docker-compose
@@ -121,7 +121,7 @@ The following is a simple Go sample.
 
 ```go
 func main() {
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -236,7 +236,8 @@ The following metrics can be taken.
 
 | name                                            | type          | desc                                                                                  | default           | note                                                                               |
 |-------------------------------------------------|---------------|---------------------------------------------------------------------------------------|-------------------|------------------------------------------------------------------------------------|
-| PLASMA_PORT                                     | string        | port number                                                                           | 8080              |                                                                                    |
+| PLASMA_PORT                                     | string        | http(https) port number                                                               | 8080              |                                                                                    |
+| PLASMA_GRPC_PORT                                | string        | gRPC port number                                                                      | 50051              |                                                                                    |
 | PLASMA_DEBUG                                    | bool          | debug mode                                                                            | false             |                                                                                    |
 | PLASMA_ORIGIN                                   | string        | set to Access-Controll-Allow-Origin                                                   |                   |                                                                                    |
 | PLASMA_SSE_RETRY                                | int           | reconnect to the source milliseconds after each connection is closed                  | 2000              |                                                                                    |
