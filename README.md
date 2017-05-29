@@ -137,10 +137,15 @@ func main() {
 		},
 	}
 	
-	ss, err := client.Events(ctx, &req)
+	ss, err := client.Events(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+    // subscribe event
+    if err := ss.Send(&req); err != nil {
+        log.Fatal(err)
+    }
 	
 	for {
 		resp, err := ss.Recv()
@@ -155,6 +160,27 @@ func main() {
 		fmt.Printf("Meta: %s\tData: %s\n", resp.EventType.Type, resp.Data)
 	}
 }
+```
+
+### unsubscribe
+
+`Events` request is stream. If you unsubscribe event, set empty event data.
+
+```
+	req := proto.Request{
+        // empty events
+		Events: []*proto.EventType{},
+	}
+	
+	ss, err := client.Events(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+    // unsubscribe event
+    if err := ss.Send(&req); err != nil {
+        log.Fatal(err)
+    }
 ```
 
 # Usage Publisher

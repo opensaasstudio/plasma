@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,6 +16,7 @@ import (
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 )
 
@@ -61,25 +63,34 @@ func NewGRPCServer(opt Option) (*GRPCServer, error) {
 	return gs, nil
 }
 
+type refreshEvents struct {
+	client *manager.Client
+	events []string
+}
+
 type StreamServer struct {
-	clientManager *manager.ClientManager
-	newClients    chan manager.Client
-	removeClients chan manager.Client
-	payloads      chan event.Payload
-	pubsub        pubsub.PubSuber
-	accessLogger  *zap.Logger
-	errorLogger   *zap.Logger
+	clientManager  *manager.ClientManager
+	newClients     chan manager.Client
+	removeClients  chan manager.Client
+	payloads       chan event.Payload
+	resfreshEvents chan refreshEvents
+	errChan        chan error
+	pubsub         pubsub.PubSuber
+	accessLogger   *zap.Logger
+	errorLogger    *zap.Logger
 }
 
 func NewStreamServer(opt Option) *StreamServer {
 	ss := &StreamServer{
-		clientManager: manager.NewClientManager(),
-		newClients:    make(chan manager.Client),
-		removeClients: make(chan manager.Client),
-		payloads:      make(chan event.Payload),
-		pubsub:        opt.PubSuber,
-		accessLogger:  opt.AccessLogger,
-		errorLogger:   opt.ErrorLogger,
+		clientManager:  manager.NewClientManager(),
+		newClients:     make(chan manager.Client),
+		removeClients:  make(chan manager.Client),
+		payloads:       make(chan event.Payload),
+		errChan:        make(chan error),
+		resfreshEvents: make(chan refreshEvents),
+		pubsub:         opt.PubSuber,
+		accessLogger:   opt.AccessLogger,
+		errorLogger:    opt.ErrorLogger,
 	}
 	ss.pubsub.Subscribe(func(payload event.Payload) {
 		ss.payloads <- payload
@@ -101,35 +112,65 @@ func (ss *StreamServer) Run() {
 				metrics.DecConnection()
 			case payload := <-ss.payloads:
 				ss.clientManager.SendPayload(payload)
+			case re := <-ss.resfreshEvents:
+				ss.clientManager.DeleteEvents(re.client)
+				re.client.SetEvents(re.events)
+				ss.clientManager.AddClient(*re.client)
 			}
 		}
 	}()
 }
 
-func (ss *StreamServer) Events(request *proto.Request, es proto.StreamService_EventsServer) error {
-	ss.accessLogger.Info("gRPC",
-		zap.Array("request-events", zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
-			for _, e := range request.Events {
-				enc.AppendString(e.Type)
-			}
-			return nil
-		})),
-	)
-	if request == nil || request.Events == nil {
-		return errors.New("request can't be nil")
-	}
-
-	l := len(request.Events)
-	events := make([]string, l)
-	for i := 0; i < l; i++ {
-		events[i] = request.Events[i].Type
-	}
-
-	client := manager.NewClient(events)
+func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
+	client := manager.NewClient([]string{})
 	ss.newClients <- client
+	go func() {
+		for {
+			request, err := es.Recv()
+			if err == io.EOF {
+				<-es.Context().Done()
+				return
+			}
+
+			if err != nil {
+				if grpc.Code(err) != codes.Canceled {
+					ss.errChan <- errors.Wrap(err, "Recv error")
+					return
+				} else {
+					<-es.Context().Done()
+					return
+				}
+			}
+
+			ss.accessLogger.Info("gRPC",
+				zap.Array("request-events", zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
+					for _, e := range request.Events {
+						enc.AppendString(e.Type)
+					}
+					return nil
+				})),
+			)
+			if request.Events == nil {
+				ss.errChan <- errors.New("event can't be nil")
+				return
+			}
+
+			l := len(request.Events)
+			events := make([]string, l)
+			for i := 0; i < l; i++ {
+				events[i] = request.Events[i].Type
+			}
+			ss.resfreshEvents <- refreshEvents{
+				client: &client,
+				events: events,
+			}
+		}
+	}()
 
 	for {
 		select {
+		case err := <-ss.errChan:
+			return err
 		case pl, open := <-client.ReceivePayload():
 			if !open {
 				return nil

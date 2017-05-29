@@ -16,6 +16,10 @@ func (c *Client) ReceivePayload() <-chan event.Payload {
 	return c.payloadChan
 }
 
+func (c *Client) SetEvents(events []string) {
+	c.events = events
+}
+
 func NewClient(events []string) Client {
 	return Client{
 		events:      events,
@@ -57,6 +61,20 @@ func (cm *ClientManager) RemoveClient(client Client) {
 		clients.mu.Unlock()
 	}
 	close(client.payloadChan)
+}
+
+func (cm *ClientManager) DeleteEvents(client *Client) {
+	for _, e := range client.events {
+		clients, ok := cm.clientsTable[e]
+		if !ok {
+			continue
+		}
+		clients.mu.Lock()
+		delete(clients.clients, client.payloadChan)
+		clients.mu.Unlock()
+
+		delete(cm.clientsTable, e)
+	}
 }
 
 const eventSeparator = ":"

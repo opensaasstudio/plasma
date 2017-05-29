@@ -128,7 +128,11 @@ func TestGRPCEvents(t *testing.T) {
 			defer conn.Close()
 			client := proto.NewStreamServiceClient(conn)
 			ctx := context.Background()
-			ss, err := client.Events(ctx, &cases[i].req)
+			ss, err := client.Events(ctx)
+			if err := ss.Send(&cases[i].req); err != nil {
+				require.NoError(err)
+			}
+
 			require.NoError(err)
 			isFirst := true
 			for cases[i].expectCount != cases[i].actualCount {

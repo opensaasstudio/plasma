@@ -7,7 +7,7 @@ option objc_class_prefix = "PLASMA";
 package proto;
 
 service StreamService {
-    rpc Events(Request) returns (stream Payload) {}
+    rpc Events(stream Request) returns (stream Payload) {}
 
 }
 
