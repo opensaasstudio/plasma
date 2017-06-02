@@ -16,6 +16,7 @@ import (
 	"github.com/openfresh/plasma/protobuf"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/pkg/errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 )
@@ -75,6 +76,7 @@ type StreamServer struct {
 	payloads       chan event.Payload
 	resfreshEvents chan refreshEvents
 	errChan        chan error
+	forceCloseChan chan manager.Client
 	pubsub         pubsub.PubSuber
 	accessLogger   *zap.Logger
 	errorLogger    *zap.Logger
@@ -87,6 +89,7 @@ func NewStreamServer(opt Option) *StreamServer {
 		removeClients:  make(chan manager.Client),
 		payloads:       make(chan event.Payload),
 		errChan:        make(chan error),
+		forceCloseChan: make(chan manager.Client),
 		resfreshEvents: make(chan refreshEvents),
 		pubsub:         opt.PubSuber,
 		accessLogger:   opt.AccessLogger,
@@ -142,6 +145,11 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 				}
 			}
 
+			if request.ForceClose {
+				ss.forceCloseChan <- client
+				return
+			}
+
 			ss.accessLogger.Info("gRPC",
 				zap.Array("request-events", zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
 					for _, e := range request.Events {
@@ -188,6 +196,9 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 				ss.removeClients <- client
 				return err
 			}
+		case <-ss.forceCloseChan:
+			ss.removeClients <- client
+			return nil
 		case <-es.Context().Done():
 			ss.removeClients <- client
 			return nil

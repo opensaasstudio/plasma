@@ -8,11 +8,11 @@ package proto;
 
 service StreamService {
     rpc Events(stream Request) returns (stream Payload) {}
-
 }
 
 message Request {
     repeated EventType Events = 1;
+    bool forceClose = 2;
 }
 
 message EventType {
