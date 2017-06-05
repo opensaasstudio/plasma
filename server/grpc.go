@@ -85,12 +85,12 @@ type StreamServer struct {
 func NewStreamServer(opt Option) *StreamServer {
 	ss := &StreamServer{
 		clientManager:  manager.NewClientManager(),
-		newClients:     make(chan manager.Client),
-		removeClients:  make(chan manager.Client),
-		payloads:       make(chan event.Payload),
-		errChan:        make(chan error),
-		forceCloseChan: make(chan manager.Client),
-		resfreshEvents: make(chan refreshEvents),
+		newClients:     make(chan manager.Client, 20),
+		removeClients:  make(chan manager.Client, 20),
+		payloads:       make(chan event.Payload, 20),
+		errChan:        make(chan error, 20),
+		forceCloseChan: make(chan manager.Client, 20),
+		resfreshEvents: make(chan refreshEvents, 20),
 		pubsub:         opt.PubSuber,
 		accessLogger:   opt.AccessLogger,
 		errorLogger:    opt.ErrorLogger,

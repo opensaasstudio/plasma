@@ -23,7 +23,7 @@ func (c *Client) SetEvents(events []string) {
 func NewClient(events []string) Client {
 	return Client{
 		events:      events,
-		payloadChan: make(chan event.Payload),
+		payloadChan: make(chan event.Payload, 20),
 	}
 }
 
