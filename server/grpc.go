@@ -157,6 +157,7 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 					}
 					return nil
 				})),
+				zap.String("time", time.Now().Format(time.RFC3339)),
 			)
 			if request.Events == nil {
 				ss.errChan <- errors.New("event can't be nil")
