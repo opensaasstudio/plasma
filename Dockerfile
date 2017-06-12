@@ -12,4 +12,4 @@ WORKDIR /plasma
 COPY ./template /plasma/template
 COPY ./bin /plasma/bin
 
-EXPOSE 8080
+EXPOSE 8080 50051
