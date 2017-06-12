@@ -37,7 +37,15 @@ func TestCheckRedis(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		err := checkRedis(c.Redis)
+		h := NewMetaHandler(Option{
+			Config: config.Config{
+				Subscriber: config.Subscriber{
+					Redis: c.Redis,
+				},
+			},
+		})
+
+		err := h.checkRedis()
 		if c.IsErr {
 			assert.NotNil(err)
 		} else {

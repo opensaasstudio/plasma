@@ -197,6 +197,7 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 				ss.removeClients <- client
 				return err
 			}
+
 		case <-ss.forceCloseChan:
 			ss.removeClients <- client
 			return nil
