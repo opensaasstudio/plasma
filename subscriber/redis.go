@@ -9,10 +9,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/go-redis/redis"
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/pubsub"
-	"gopkg.in/redis.v5"
 )
 
 type Redis struct {
@@ -97,13 +97,11 @@ func (r *Redis) receiveMessage(pb *redis.PubSub) (*redis.Message, error) {
 			return nil, fmt.Errorf("redis: unknown message: %T", msgi)
 		}
 	}
+
 }
 
 func (r *Redis) Subscribe() error {
-	ps, err := r.client.Subscribe(r.config.Channels...)
-	if err != nil {
-		return err
-	}
+	ps := r.client.Subscribe(r.config.Channels...)
 	defer ps.Close()
 	for {
 		msg, err := r.receiveMessage(ps)

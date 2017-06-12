@@ -1,6 +1,14 @@
-hash: bea123a9adafdd81b72bbe45711b296c12c128e70ed0e18477e960aea126cb59
-updated: 2017-05-20T00:41:47.512136265+09:00
+hash: 2929a03edacd680176e51f438d907fc819cc7df420be57c0145ef43169dede1a
+updated: 2017-06-12T17:42:41.27262233+09:00
 imports:
+- name: github.com/go-redis/redis
+  version: eb066030c08c254136a0dbfe9f7a3625a0871beb
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+  - internal/proto
 - name: github.com/golang/protobuf
   version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
   subpackages:
@@ -19,7 +27,7 @@ imports:
 - name: go.uber.org/atomic
   version: 4e336646b2ef9fc6e47be8e21594178f98e5ebcf
 - name: go.uber.org/zap
-  version: fab453050a7a08c35f31fc5fff6f2dbd962285ab
+  version: 9cabc84638b70e564c3dab2766efcb1ded2aac9f
   subpackages:
   - buffer
   - internal/bufferpool
@@ -53,7 +61,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: d2e1b51f33ff8c5e4a15560ff049d200e83726c5
+  version: d8960bd63c6743defa6d54926e5edfa8e4a28e43
   subpackages:
   - codes
   - credentials
@@ -68,14 +76,8 @@ imports:
   - status
   - tap
   - transport
-- name: gopkg.in/redis.v5
-  version: a16aeec10ff407b1e7be6dd35797ccf5426ef0f0
-  subpackages:
-  - internal
-  - internal/consistenthash
-  - internal/hashtag
-  - internal/pool
-  - internal/proto
+- name: gopkg.in/redis.v6
+  version: 663bb76bcc3763c41877b63671003705a47289c5
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9

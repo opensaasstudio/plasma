@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	redis "gopkg.in/redis.v5"
+	"github.com/go-redis/redis"
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"

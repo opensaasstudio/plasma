@@ -2,12 +2,11 @@ package main
 
 import (
 	"crypto/tls"
+	"golang.org/x/net/context"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"golang.org/x/net/context"
 
 	"golang.org/x/sync/errgroup"
 

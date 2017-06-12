@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	redis "gopkg.in/redis.v5"
+	"github.com/go-redis/redis"
 
 	"go.uber.org/zap"
 
@@ -19,6 +19,7 @@ type metaHandler struct {
 	errorLogger  *zap.Logger
 	config       config.Config
 	mux          *http.ServeMux
+	redisClient  *redis.Client
 }
 
 func (h metaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +27,20 @@ func (h metaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewMetaHandler(opt Option) metaHandler {
+
+	redisConf := opt.Config.Subscriber.Redis
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisConf.Addr,
+		Password: redisConf.Password,
+		DB:       redisConf.DB,
+	})
+
 	h := metaHandler{
 		accessLogger: opt.AccessLogger,
 		errorLogger:  opt.ErrorLogger,
 		config:       opt.Config,
 		mux:          http.NewServeMux(),
+		redisClient:  redisClient,
 	}
 
 	if h.config.Debug {
@@ -42,15 +52,8 @@ func NewMetaHandler(opt Option) metaHandler {
 	return h
 }
 
-func checkRedis(config config.Redis) error {
-	addr := config.Addr
-	opt := &redis.Options{
-		Addr:     addr,
-		Password: config.Password,
-		DB:       config.DB,
-	}
-	client := redis.NewClient(opt)
-	return client.Ping().Err()
+func (h *metaHandler) checkRedis() error {
+	return h.redisClient.Ping().Err()
 }
 
 func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +71,6 @@ func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// publish to Redis for testing
-		redisConf := h.config.Subscriber.Redis
-		opt := &redis.Options{
-			Addr:     redisConf.Addr,
-			Password: redisConf.Password,
-			DB:       redisConf.DB,
-		}
 		b, err := json.Marshal(p)
 		if err != nil {
 			h.errorLogger.Error("failed to marshal json in debug endpoint",
@@ -82,11 +79,11 @@ func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		client := redis.NewClient(opt)
+
 		channel := h.config.Subscriber.Redis.Channels[0]
-		if err := client.Publish(channel, string(b)).Err(); err != nil {
+		if err := h.redisClient.Publish(channel, string(b)).Err(); err != nil {
 			h.errorLogger.Error("failed to publlish to redis",
-				zap.Object("redis", redisConf),
+				zap.Object("redis", h.config.Subscriber.Redis),
 				zap.Error(err),
 			)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -102,7 +99,7 @@ func (h *metaHandler) debug(w http.ResponseWriter, r *http.Request) {
 func (h *metaHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	if h.config.Subscriber.Type == "redis" {
-		if err := checkRedis(h.config.Subscriber.Redis); err != nil {
+		if err := h.checkRedis(); err != nil {
 			h.errorLogger.Error("failed to connect redis",
 				zap.Error(err),
 				zap.Object("redis", h.config.Subscriber.Redis),
