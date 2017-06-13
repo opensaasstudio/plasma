@@ -121,44 +121,44 @@ The following is a simple Go sample.
 
 ```go
 func main() {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
+    conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
 
-	client := proto.NewStreamServiceClient(conn)
-	ctx := context.Background()
+    client := proto.NewStreamServiceClient(conn)
+    ctx := context.Background()
 
-	req := proto.Request{
-		Events: []*proto.EventType{
-			eventType("program:1234:poll"),
-			eventType("program:1234:views"),
-		},
-	}
-	
-	ss, err := client.Events(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
+    req := proto.Request{
+        Events: []*proto.EventType{
+            eventType("program:1234:poll"),
+            eventType("program:1234:views"),
+        },
+    }
+
+    ss, err := client.Events(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
 
     // subscribe event
     if err := ss.Send(&req); err != nil {
         log.Fatal(err)
     }
-	
-	for {
-		resp, err := ss.Recv()
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		if resp == nil {
-			log.Println("payload is nil")
-			continue
-		}
-		fmt.Printf("Meta: %s\tData: %s\n", resp.EventType.Type, resp.Data)
-	}
+
+    for {
+        resp, err := ss.Recv()
+        if err != nil {
+            log.Println(err)
+            continue
+        }
+        if resp == nil {
+            log.Println("payload is nil")
+            continue
+        }
+        fmt.Printf("Meta: %s\tData: %s\n", resp.EventType.Type, resp.Data)
+    }
 }
 ```
 
@@ -166,16 +166,16 @@ func main() {
 
 `Events` request is stream. If you unsubscribe event, set empty event data.
 
-```
-	req := proto.Request{
+```go
+    req := proto.Request{
         // empty events
-		Events: []*proto.EventType{},
-	}
-	
-	ss, err := client.Events(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
+        Events: []*proto.EventType{},
+    }
+
+    ss, err := client.Events(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
 
     // unsubscribe event
     if err := ss.Send(&req); err != nil {
