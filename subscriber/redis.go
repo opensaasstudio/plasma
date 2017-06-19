@@ -136,5 +136,9 @@ func (r *Redis) Subscribe() error {
 			continue
 		}
 		r.pubsub.Publish(payload)
+		r.errorLogger.Info("publish plasma event payload",
+			zap.String("payload", msg.Payload),
+			zap.String("channel", msg.Channel),
+		)
 	}
 }
