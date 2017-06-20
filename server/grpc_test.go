@@ -165,7 +165,7 @@ func TestGRPCEvents(t *testing.T) {
 	}
 
 	// keep sending dummy messages until all clients are ready to receive messages
-	for int(readyClient) != len(cases) {
+	for int(atomic.LoadInt32(&readyClient)) != len(cases) {
 		pb.Publish(dummyEvent)
 	}
 
