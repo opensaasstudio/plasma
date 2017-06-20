@@ -2,15 +2,18 @@ package main
 
 import (
 	"crypto/tls"
-	"golang.org/x/net/context"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"golang.org/x/net/context"
+
 	"golang.org/x/sync/errgroup"
 
 	"go.uber.org/zap"
+
+	"net/http"
 
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
@@ -18,7 +21,6 @@ import (
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
 	"github.com/openfresh/plasma/subscriber"
-	"net/http"
 )
 
 func httpListener(logger *zap.Logger, config config.Config) net.Listener {

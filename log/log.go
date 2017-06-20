@@ -48,7 +48,7 @@ func NewLogger(config config.Log) (*zap.Logger, error) {
 	return logger, nil
 }
 
-func GRPCRequestToLogFields(info *grpc.StreamServerInfo, start time.Time, err error) []zapcore.Field {
+func GRPCRequestToLogFields(_ *grpc.StreamServerInfo, start time.Time, err error) []zapcore.Field {
 	errCode := grpc.Code(err)
 	errDesc := grpc.ErrorDesc(err)
 	duration := time.Since(start)

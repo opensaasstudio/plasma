@@ -40,7 +40,7 @@ func genFakeEventPayload() event.Payload {
 	}
 }
 
-func newMock(pb pubsub.PubSuber, errorLogger *zap.Logger, config config.Config) (Subscriber, error) {
+func newMock(pb pubsub.PubSuber, _ *zap.Logger, config config.Config) (Subscriber, error) {
 	rand.Seed(time.Now().UnixNano())
 	return &Mock{
 		config: config,
