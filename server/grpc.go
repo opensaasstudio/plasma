@@ -79,6 +79,7 @@ type StreamServer struct {
 	removeClients  chan manager.Client
 	payloads       chan event.Payload
 	resfreshEvents chan refreshEvents
+	errChan        chan error
 	forceCloseChan chan manager.Client
 	pubsub         pubsub.PubSuber
 	accessLogger   *zap.Logger
@@ -91,6 +92,7 @@ func NewStreamServer(opt Option) (*StreamServer, error) {
 		newClients:     make(chan manager.Client, 20),
 		removeClients:  make(chan manager.Client, 20),
 		payloads:       make(chan event.Payload, 20),
+		errChan:        make(chan error, 20),
 		forceCloseChan: make(chan manager.Client, 20),
 		resfreshEvents: make(chan refreshEvents, 20),
 		pubsub:         opt.PubSuber,
