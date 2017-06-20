@@ -18,6 +18,7 @@ import (
 	"github.com/openfresh/plasma/manager"
 	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/pubsub"
+	"github.com/pkg/errors"
 )
 
 type sseHandler struct {
@@ -34,7 +35,7 @@ type sseHandler struct {
 	config        config.Config
 }
 
-func NewSSEHandler(opt Option) sseHandler {
+func NewSSEHandler(opt Option) (sseHandler, error) {
 	h := sseHandler{
 		clientManager: manager.NewClientManager(),
 		timer:         time.NewTicker(10 * time.Second),
@@ -48,12 +49,14 @@ func NewSSEHandler(opt Option) sseHandler {
 		errorLogger:   opt.ErrorLogger,
 		config:        opt.Config,
 	}
-	h.pubsub.Subscribe(func(payload event.Payload) {
+	if err := h.pubsub.Subscribe(func(payload event.Payload) {
 		h.payloads <- payload
-	})
+	}); err != nil {
+		return h, errors.Wrap(err, "failed to subscribe")
+	}
 	h.Run()
 
-	return h
+	return h, nil
 }
 
 const heartBeatEvent = "heartbeat"

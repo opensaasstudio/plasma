@@ -59,7 +59,11 @@ func NewGRPCServer(opt Option) (*GRPCServer, error) {
 	opts = append(opts, grpc.StreamInterceptor(gs.StreamAccessLogHandler))
 	gs.Server = grpc.NewServer(opts...)
 
-	proto.RegisterStreamServiceServer(gs.Server, NewStreamServer(opt))
+	ss, err := NewStreamServer(opt)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to NewStreamServer")
+	}
+	proto.RegisterStreamServiceServer(gs.Server, ss)
 
 	return gs, nil
 }
@@ -82,7 +86,7 @@ type StreamServer struct {
 	errorLogger    *zap.Logger
 }
 
-func NewStreamServer(opt Option) *StreamServer {
+func NewStreamServer(opt Option) (*StreamServer, error) {
 	ss := &StreamServer{
 		clientManager:  manager.NewClientManager(),
 		newClients:     make(chan manager.Client, 20),
@@ -95,12 +99,14 @@ func NewStreamServer(opt Option) *StreamServer {
 		accessLogger:   opt.AccessLogger,
 		errorLogger:    opt.ErrorLogger,
 	}
-	ss.pubsub.Subscribe(func(payload event.Payload) {
+	if err := ss.pubsub.Subscribe(func(payload event.Payload) {
 		ss.payloads <- payload
-	})
+	}); err != nil {
+		return nil, errors.Wrap(err, "failed to subscribe")
+	}
 	ss.Run()
 
-	return ss
+	return ss, nil
 }
 
 func (ss *StreamServer) Run() {

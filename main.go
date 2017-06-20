@@ -139,7 +139,12 @@ func main() {
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	}
-	sseHandler := server.NewSSEHandler(sseServerOption)
+	sseHandler, err := server.NewSSEHandler(sseServerOption)
+	if err != nil {
+		errorLogger.Fatal("failed to create SSE Handler",
+			zap.Error(err),
+		)
+	}
 
 	// For Meta (HealthCheck, Metrics)
 	metaHandler := server.NewMetaHandler(server.Option{
