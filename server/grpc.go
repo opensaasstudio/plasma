@@ -176,14 +176,16 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 			})),
 			zap.String("time", time.Now().Format(time.RFC3339)),
 		)
-		if request.Events == nil {
-			return errors.New("event can't be nil")
-		}
 
-		l := len(request.Events)
-		events := make([]string, l)
-		for i := 0; i < l; i++ {
-			events[i] = request.Events[i].Type
+		var events []string
+		if request.Events == nil {
+			events = make([]string, 0)
+		} else {
+			l := len(request.Events)
+			events = make([]string, l)
+			for i := 0; i < l; i++ {
+				events[i] = request.Events[i].Type
+			}
 		}
 		ss.resfreshEvents <- refreshEvents{
 			client: &client,
