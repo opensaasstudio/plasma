@@ -79,8 +79,6 @@ type StreamServer struct {
 	removeClients  chan manager.Client
 	payloads       chan event.Payload
 	resfreshEvents chan refreshEvents
-	errChan        chan error
-	forceCloseChan chan manager.Client
 	pubsub         pubsub.PubSuber
 	accessLogger   *zap.Logger
 	errorLogger    *zap.Logger
@@ -92,8 +90,6 @@ func NewStreamServer(opt Option) (*StreamServer, error) {
 		newClients:     make(chan manager.Client, 20),
 		removeClients:  make(chan manager.Client, 20),
 		payloads:       make(chan event.Payload, 20),
-		errChan:        make(chan error, 20),
-		forceCloseChan: make(chan manager.Client, 20),
 		resfreshEvents: make(chan refreshEvents, 20),
 		pubsub:         opt.PubSuber,
 		accessLogger:   opt.AccessLogger,
@@ -133,63 +129,12 @@ func (ss *StreamServer) Run() {
 func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 	client := manager.NewClient([]string{})
 	ss.newClients <- client
-	go func() {
-		for {
-			request, err := es.Recv()
-			if err == io.EOF {
-				<-es.Context().Done()
-				return
-			}
-
-			if err != nil {
-				if grpc.Code(err) != codes.Canceled {
-					ss.errChan <- errors.Wrap(err, "Recv error")
-					return
-				} else {
-					<-es.Context().Done()
-					return
-				}
-			}
-
-			if request.ForceClose {
-				ss.forceCloseChan <- client
-				return
-			}
-
-			ss.accessLogger.Info("gRPC",
-				zap.Array("request-events", zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
-					for _, e := range request.Events {
-						enc.AppendString(e.Type)
-					}
-					return nil
-				})),
-				zap.String("time", time.Now().Format(time.RFC3339)),
-			)
-			if request.Events == nil {
-				ss.errChan <- errors.New("event can't be nil")
-				return
-			}
-
-			l := len(request.Events)
-			events := make([]string, l)
-			for i := 0; i < l; i++ {
-				events[i] = request.Events[i].Type
-			}
-			ss.resfreshEvents <- refreshEvents{
-				client: &client,
-				events: events,
-			}
-		}
+	defer func() {
+		ss.removeClients <- client
 	}()
 
-	for {
-		select {
-		case err := <-ss.errChan:
-			return err
-		case pl, open := <-client.ReceivePayload():
-			if !open {
-				return nil
-			}
+	go func() {
+		for pl := range client.ReceivePayload() {
 			eventType := proto.EventType{Type: pl.Meta.Type}
 			p := &proto.Payload{
 				EventType: &eventType,
@@ -200,17 +145,49 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 					zap.Error(err),
 					zap.Object("payload", pl),
 				)
-				ss.removeClients <- client
-				return err
+				// TODO error handling
 			}
+		}
+	}()
 
-		case <-ss.forceCloseChan:
-			ss.removeClients <- client
-			return nil
-		case <-es.Context().Done():
-			ss.removeClients <- client
+	for {
+		request, err := es.Recv()
+		if err == io.EOF {
 			return nil
 		}
 
+		if err != nil {
+			if grpc.Code(err) != codes.Canceled {
+				return errors.Wrap(err, "Recv error")
+			}
+			return nil
+		}
+
+		if request.ForceClose {
+			return nil
+		}
+
+		ss.accessLogger.Info("gRPC",
+			zap.Array("request-events", zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
+				for _, e := range request.Events {
+					enc.AppendString(e.Type)
+				}
+				return nil
+			})),
+			zap.String("time", time.Now().Format(time.RFC3339)),
+		)
+		if request.Events == nil {
+			return errors.New("event can't be nil")
+		}
+
+		l := len(request.Events)
+		events := make([]string, l)
+		for i := 0; i < l; i++ {
+			events[i] = request.Events[i].Type
+		}
+		ss.resfreshEvents <- refreshEvents{
+			client: &client,
+			events: events,
+		}
 	}
 }
