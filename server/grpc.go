@@ -146,6 +146,10 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 					zap.Object("payload", pl),
 				)
 				// TODO error handling
+			} else {
+				ss.errorLogger.Debug("success to receive payload",
+					zap.Object("payload", pl),
+				)
 			}
 		}
 	}()
