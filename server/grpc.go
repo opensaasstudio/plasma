@@ -79,7 +79,6 @@ type StreamServer struct {
 	removeClients  chan manager.Client
 	payloads       chan event.Payload
 	resfreshEvents chan refreshEvents
-	errChan        chan error
 	forceCloseChan chan manager.Client
 	pubsub         pubsub.PubSuber
 	accessLogger   *zap.Logger
@@ -92,7 +91,6 @@ func NewStreamServer(opt Option) (*StreamServer, error) {
 		newClients:     make(chan manager.Client, 20),
 		removeClients:  make(chan manager.Client, 20),
 		payloads:       make(chan event.Payload, 20),
-		errChan:        make(chan error, 20),
 		forceCloseChan: make(chan manager.Client, 20),
 		resfreshEvents: make(chan refreshEvents, 20),
 		pubsub:         opt.PubSuber,
@@ -133,6 +131,10 @@ func (ss *StreamServer) Run() {
 func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 	client := manager.NewClient([]string{})
 	ss.newClients <- client
+
+	errChan := make(chan error)
+	defer close(errChan)
+
 	go func() {
 		for {
 			request, err := es.Recv()
@@ -143,7 +145,7 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 
 			if err != nil {
 				if grpc.Code(err) != codes.Canceled {
-					ss.errChan <- errors.Wrap(err, "Recv error")
+					errChan <- errors.Wrap(err, "Recv error")
 					return
 				} else {
 					<-es.Context().Done()
@@ -166,7 +168,7 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 				zap.String("time", time.Now().Format(time.RFC3339)),
 			)
 			if request.Events == nil {
-				ss.errChan <- errors.New("event can't be nil")
+				errChan <- errors.New("event can't be nil")
 				return
 			}
 
@@ -184,7 +186,7 @@ func (ss *StreamServer) Events(es proto.StreamService_EventsServer) error {
 
 	for {
 		select {
-		case err := <-ss.errChan:
+		case err := <-errChan:
 			return err
 		case pl, open := <-client.ReceivePayload():
 			if !open {
