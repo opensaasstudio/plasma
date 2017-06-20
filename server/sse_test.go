@@ -71,7 +71,8 @@ func setUpSSEHandler(t *testing.T, pb pubsub.PubSuber, origin string) sseHandler
 		ErrorLogger:  logger,
 		Config:       config,
 	}
-	handler := NewSSEHandler(opt)
+	handler, err := NewSSEHandler(opt)
+	require.NoError(t, err)
 
 	return handler
 }

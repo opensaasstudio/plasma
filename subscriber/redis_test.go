@@ -52,9 +52,10 @@ func TestRedisReceiveMessage(t *testing.T) {
 		Data: json.RawMessage([]byte(`{"data":"programId:1234"}`)),
 	}
 
-	pb.Subscribe(func(p event.Payload) {
+	err = pb.Subscribe(func(p event.Payload) {
 		assert.Equal(payload, p)
 	})
+	assert.NoError(err)
 	go r.Subscribe()
 
 	b, err := json.Marshal(payload)
