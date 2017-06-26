@@ -72,8 +72,6 @@ func (cm *ClientManager) DeleteEvents(client *Client) {
 		clients.mu.Lock()
 		delete(clients.clients, client.payloadChan)
 		clients.mu.Unlock()
-
-		delete(cm.clientsTable, e)
 	}
 }
 
