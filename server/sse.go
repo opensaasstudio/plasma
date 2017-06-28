@@ -68,9 +68,11 @@ func (h sseHandler) Run() {
 			case client := <-h.newClients:
 				h.clientManager.AddClient(client)
 				metrics.IncConnection()
+				metrics.IncConnectionSSE()
 			case client := <-h.removeClients:
 				h.clientManager.RemoveClient(client)
 				metrics.DecConnection()
+				metrics.DecConnectionSSE()
 			case payload := <-h.payloads:
 				h.clientManager.SendPayload(payload)
 			case <-h.timer.C:

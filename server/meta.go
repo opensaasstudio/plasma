@@ -11,7 +11,6 @@ import (
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
-	"github.com/openfresh/plasma/metrics"
 )
 
 type metaHandler struct {
@@ -47,7 +46,6 @@ func NewMetaHandler(opt Option) metaHandler {
 		h.mux.HandleFunc("/debug", h.debug)
 	}
 	h.mux.HandleFunc("/hc", h.healthCheck)
-	h.mux.HandleFunc("/metrics", h.metrics)
 
 	return h
 }
@@ -112,8 +110,4 @@ func (h *metaHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
 
 	fields := append(log.HTTPRequestToLogFields(r), zap.Int("status", status))
 	h.accessLogger.Info("healthCheck", fields...)
-}
-
-func (h *metaHandler) metrics(w http.ResponseWriter, r *http.Request) {
-	metrics.HTTPHandler(w, r)
 }
