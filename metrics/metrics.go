@@ -34,7 +34,9 @@ type Metrics struct {
 
 	StackInUse metrics.Gauge
 
-	Connections metrics.Gauge
+	Connections     metrics.Gauge
+	ConnectionsSSE  metrics.Gauge
+	ConnectionsGRPC metrics.Gauge
 }
 
 func NewMetrics(config config.Config) (*Metrics, error) {
@@ -57,6 +59,8 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 		MemorySys:        metrics.NewGauge(),
 		StackInUse:       metrics.NewGauge(),
 		Connections:      metrics.NewGauge(),
+		ConnectionsSSE:   metrics.NewGauge(),
+		ConnectionsGRPC:  metrics.NewGauge(),
 	}
 
 	if err := metrics.Register("GcLast", m.GcLast); err != nil {
@@ -110,6 +114,12 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 	if err := metrics.Register("Connections", m.Connections); err != nil {
 		return m, err
 	}
+	if err := metrics.Register("ConnectionsSSE", m.ConnectionsSSE); err != nil {
+		return m, err
+	}
+	if err := metrics.Register("ConnectionsGRPC", m.ConnectionsGRPC); err != nil {
+		return m, err
+	}
 
 	sender, err := sender.NewMetricsSender(m.config)
 	if err != nil {
@@ -124,8 +134,11 @@ func NewMetrics(config config.Config) (*Metrics, error) {
 func (m *Metrics) Start() {
 	go func() {
 		for range m.ticker.C {
-			s := GetStats()
-			m.update(s)
+			gs := GetGoStats()
+			m.updateGo(gs)
+
+			ps := GetPlasmaStats()
+			m.updatePlasma(ps)
 		}
 	}()
 
@@ -136,7 +149,7 @@ func (m *Metrics) Stop() {
 	m.ticker.Stop()
 }
 
-func (m *Metrics) update(s *Stats) {
+func (m *Metrics) updateGo(s *GoStats) {
 	m.GcLast.Update(int64(s.GcLast))
 	m.GcNext.Update(int64(s.GcNext))
 	m.GcNum.Update(int64(s.GcNum))
@@ -153,5 +166,10 @@ func (m *Metrics) update(s *Stats) {
 	m.MemoryMallocs.Update(int64(s.MemoryMallocs))
 	m.MemorySys.Update(int64(s.MemorySys))
 	m.StackInUse.Update(int64(s.StackInUse))
+}
+
+func (m *Metrics) updatePlasma(s *PlasmaStats) {
 	m.Connections.Update(s.Connections)
+	m.ConnectionsSSE.Update(s.ConnectionsSSE)
+	m.ConnectionsGRPC.Update(s.ConnectionsGRPC)
 }

@@ -31,16 +31,17 @@ func New() Config {
 }
 
 type Config struct {
-	AccessLog  Log `envconfig:"ACCESS_LOG"`
-	ErrorLog   Log `envconfig:"ERROR_LOG"`
-	Debug      bool
-	Origin     string
-	Port       string `default:"8080"`
-	GrpcPort   string `default:"50051"`
-	SSE        ServerSentEvent
-	Subscriber Subscriber
-	TLS        Cert `envconfig:"TLS"`
-	Metrics    Metrics
+	AccessLog   Log `envconfig:"ACCESS_LOG"`
+	ErrorLog    Log `envconfig:"ERROR_LOG"`
+	Debug       bool
+	Origin      string
+	Port        string `default:"8080"`
+	GrpcPort    string `default:"50051"`
+	MerticsPort string `default:"9999"`
+	SSE         ServerSentEvent
+	Subscriber  Subscriber
+	TLS         Cert `envconfig:"TLS"`
+	Metrics     Metrics
 }
 
 type ServerSentEvent struct {

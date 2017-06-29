@@ -112,9 +112,11 @@ func (ss *StreamServer) Run() {
 			case client := <-ss.newClients:
 				ss.clientManager.AddClient(client)
 				metrics.IncConnection()
+				metrics.IncConnectionGRPC()
 			case client := <-ss.removeClients:
 				ss.clientManager.RemoveClient(client)
 				metrics.DecConnection()
+				metrics.DecConnectionGRPC()
 			case payload := <-ss.payloads:
 				ss.clientManager.SendPayload(payload)
 			case re := <-ss.resfreshEvents:

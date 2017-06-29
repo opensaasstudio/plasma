@@ -55,6 +55,17 @@ func httpListener(logger *zap.Logger, config config.Config) net.Listener {
 	return l
 }
 
+func metricsListener(logger *zap.Logger, metricsPort string) net.Listener {
+	l, err := net.Listen("tcp", ":"+metricsPort)
+	if err != nil {
+		logger.Fatal("failed to http listen(metrics)",
+			zap.Error(err),
+			zap.String("port", metricsPort),
+		)
+	}
+	return l
+}
+
 func grpcListener(logger *zap.Logger, config config.Config) net.Listener {
 	l, err := net.Listen("tcp", ":"+config.GrpcPort)
 	if err != nil {
@@ -82,6 +93,8 @@ func main() {
 	defer l.Close()
 	gl := grpcListener(errorLogger, config)
 	defer gl.Close()
+	ml := metricsListener(errorLogger, config.MerticsPort)
+	defer ml.Close()
 
 	pubsuber := pubsub.NewPubSub()
 
@@ -146,12 +159,23 @@ func main() {
 		)
 	}
 
-	// For Meta (HealthCheck, Metrics)
+	// For Metrics
+	metricsHandler := server.NewMetricsHandler(server.Option{
+		AccessLogger: accessLogger,
+		ErrorLogger:  errorLogger,
+		Config:       config,
+	})
+
+	// For Meta (HealthCheck)
 	metaHandler := server.NewMetaHandler(server.Option{
 		AccessLogger: accessLogger,
 		ErrorLogger:  errorLogger,
 		Config:       config,
 	})
+
+	metricsServer := &http.Server{
+		Handler: metricsHandler,
+	}
 
 	httpServer := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -202,6 +226,14 @@ func main() {
 	go func() {
 		if err := grpcServer.Serve(gl); err != nil {
 			errorLogger.Fatal("failed to gRPC serve",
+				zap.Error(err),
+			)
+		}
+	}()
+
+	go func() {
+		if err := metricsServer.Serve(ml); err != nil {
+			errorLogger.Fatal("failed to metrics http serve",
 				zap.Error(err),
 			)
 		}

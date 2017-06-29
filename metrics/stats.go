@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type Stats struct {
+type GoStats struct {
 	Time int64 `json:"time"`
 	// runtime
 	GoVersion    string `json:"go_version"`
@@ -40,8 +40,13 @@ type Stats struct {
 	GcPerSecond      float64   `json:"gc_per_second"`
 	GcPausePerSecond float64   `json:"gc_pause_per_second"`
 	GcPause          []float64 `json:"gc_pause"`
-	// Connections
-	Connections int64 `json:"connections"`
+}
+
+type PlasmaStats struct {
+	Time            int64 `json:"time"`
+	Connections     int64 `json:"connections"`
+	ConnectionsSSE  int64 `json:"connections_sse"`
+	ConnectionsGRPC int64 `json:"connections_grpc"`
 }
 
 type safeTime struct {
@@ -69,20 +74,46 @@ var lastPauseNs uint64
 var lastNumGc uint32
 
 var connections int64
+var connectionsSSE int64
+var connectionsGRPC int64
 
 func IncConnection() {
 	atomic.AddInt64(&connections, 1)
+}
+
+func IncConnectionSSE() {
+	atomic.AddInt64(&connectionsSSE, 1)
+}
+
+func IncConnectionGRPC() {
+	atomic.AddInt64(&connectionsSSE, 1)
 }
 
 func DecConnection() {
 	atomic.AddInt64(&connections, -1)
 }
 
+func DecConnectionSSE() {
+	atomic.AddInt64(&connectionsSSE, -1)
+}
+
+func DecConnectionGRPC() {
+	atomic.AddInt64(&connectionsGRPC, -1)
+}
+
 func GetConnection() int64 {
 	return atomic.LoadInt64(&connections)
 }
 
-func GetStats() *Stats {
+func GetConnectionSSE() int64 {
+	return atomic.LoadInt64(&connectionsSSE)
+}
+
+func GetConnectionGRPC() int64 {
+	return atomic.LoadInt64(&connectionsGRPC)
+}
+
+func GetGoStats() *GoStats {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
 
@@ -123,7 +154,7 @@ func GetStats() *Stats {
 	atomic.SwapUint32(&lastNumGc, mem.NumGC)
 	lastSampleTime.set(time.Now())
 
-	return &Stats{
+	return &GoStats{
 		Time:         now.UnixNano(),
 		GoVersion:    runtime.Version(),
 		GoOs:         runtime.GOOS,
@@ -155,7 +186,16 @@ func GetStats() *Stats {
 		GcPerSecond:      gcPerSecond,
 		GcPausePerSecond: gcPausePerSecond,
 		GcPause:          gcPause,
-		// Connections
-		Connections: GetConnection(),
+	}
+}
+
+func GetPlasmaStats() *PlasmaStats {
+	now := time.Now()
+
+	return &PlasmaStats{
+		Time:            now.UnixNano(),
+		Connections:     GetConnection(),
+		ConnectionsSSE:  GetConnectionSSE(),
+		ConnectionsGRPC: GetConnectionGRPC(),
 	}
 }
