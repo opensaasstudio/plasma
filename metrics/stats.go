@@ -86,7 +86,7 @@ func IncConnectionSSE() {
 }
 
 func IncConnectionGRPC() {
-	atomic.AddInt64(&connectionsSSE, 1)
+	atomic.AddInt64(&connectionsGRPC, 1)
 }
 
 func DecConnection() {
