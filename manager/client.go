@@ -110,13 +110,23 @@ func (cm *ClientManager) SendPayload(payload event.Payload) {
 				wg2.Add(1)
 				go func(client chan event.Payload) {
 					defer wg2.Done()
-					client <- payload
+					sendPayloadSafety(client, payload)
 				}(client)
 			}
 			wg2.Wait()
 		}(e)
 	}
 	wg.Wait()
+}
+
+func sendPayloadSafety(client chan event.Payload, payload event.Payload) {
+	defer func() {
+		if err := recover(); err != nil {
+			return
+		}
+	}()
+	client <- payload
+	return
 }
 
 const heartBeatEvent = "heartbeat"
