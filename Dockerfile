@@ -1,15 +1,15 @@
-FROM gliderlabs/alpine:3.4
+FROM openfresh/golang:1.8.3 AS build
 
-RUN apk --no-cache add ca-certificates openssl && \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk && \
-    apk --no-cache add glibc-2.25-r0.apk
+WORKDIR /go/src/github.com/openfresh/plasma
+COPY . . 
+RUN make deps
+RUN make build
 
-CMD ["/plasma/bin/plasma"]
+FROM gliderlabs/alpine:3.6
 
 WORKDIR /plasma
-
-COPY ./template /plasma/template
-COPY ./bin /plasma/bin
-
+RUN apk --no-cache add ca-certificates openssl
+COPY --from=build /go/src/github.com/openfresh/plasma/bin/plasma /plasma/bin/ 
+COPY --from=build /go/src/github.com/openfresh/plasma/template/ /plasma/template/
+CMD ["/plasma/bin/plasma"]
 EXPOSE 8080 50051 9999
