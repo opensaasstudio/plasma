@@ -6,6 +6,8 @@ plasma
 [![issues](https://img.shields.io/github/issues/openfresh/plasma.svg?style=flat)](https://github.com/openfresh/plasma/issues?state=open)
 [![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 [![imagelayers.io](https://badge.imagelayers.io/openfresh/plasma:latest.svg)](https://imagelayers.io/?images=openfresh/plasma:latest 'Get your own badge on imagelayers.io')
+[![Docker Stars](https://img.shields.io/docker/stars/openfresh/plasma.svg)]()
+[![Docker Pulls](https://img.shields.io/docker/pulls/openfresh/plasma.svg)]()
 
 ![logo](img/plasma_logo.png)
 
