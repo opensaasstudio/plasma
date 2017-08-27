@@ -11,15 +11,15 @@ TARGET_SERIAL_PACKAGES=$(addprefix test-,$(SERIAL_PACKAGES))
 install-go:
 		sh util/go.sh 1.8.2
 
-install-glide:
-		sh util/glide.sh v0.12.3
+install-dep:
+		go get -u github.com/golang/dep/cmd/dep
 
-deps: install-glide
-		glide install
+deps: install-dep
+		dep ensure
 
-deps-update: install-glide
+deps-update: install-dep
 		rm -rf ./vendor
-		glide update
+		dep ensure -update
 
 build:
 		GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/plasma main.go

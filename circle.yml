@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /go/src/github.com/openfresh/plasma
     docker:
-      - image: openfresh/golang:latest 
+      - image: openfresh/golang:latest
       - image: redis:3.2.9-alpine
     steps:
       - checkout
@@ -38,7 +38,7 @@ jobs:
   release_latest:
     working_directory: /go/src/github.com/openfresh/plasma
     docker:
-      - image: openfresh/golang:latest 
+      - image: circleci/classic:edge
     steps:
       - attach_workspace:
           at: .
