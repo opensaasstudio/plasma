@@ -38,7 +38,7 @@ jobs:
   release_latest:
     working_directory: /go/src/github.com/openfresh/plasma
     docker:
-      - image: circleci/classic:edge
+      - image: openfresh/golang:latest 
     steps:
       - attach_workspace:
           at: .
