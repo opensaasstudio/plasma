@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"net"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -88,6 +89,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		if err := http.ListenAndServe(config.Pprof.Host+":"+config.Pprof.Port, nil); err != nil {
+			errorLogger.Fatal("failed to pprof http serve",
+				zap.Error(err),
+			)
+		}
+	}()
 
 	l := httpListener(errorLogger, config)
 	defer l.Close()
