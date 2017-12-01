@@ -103,14 +103,14 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 		http.Error(w, "specify event queries", http.StatusBadRequest)
 		return http.StatusBadRequest
 	}
-	lastEvnetID := 0
+	lastEventID := 0
 	if id := r.Header.Get("HTTP_LAST_EVENT_ID"); id != "" {
 		if i, err := strconv.Atoi(id); err == nil {
-			lastEvnetID = i
+			lastEventID = i
 		}
 	} else if id, ok := r.URL.Query()["lastEventId"]; ok {
 		if i, err := strconv.Atoi(id[0]); err == nil {
-			lastEvnetID = i
+			lastEventID = i
 		}
 	}
 
@@ -134,6 +134,9 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 
 	client := manager.NewClient(eventRequests)
 	h.newClients <- client
+	defer func() {
+		h.removeClients <- client
+	}()
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -159,7 +162,7 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 				// https://github.com/Yaffle/EventSource#server-side-requirements
 				fmt.Fprint(w, ":heartbeat \n\n")
 				f.Flush()
-				lastEvnetID++
+				lastEventID++
 				continue
 			}
 			b, err := json.Marshal(pl)
@@ -170,12 +173,11 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 				)
 				continue
 			}
-			fmt.Fprintf(w, "id: %d\n", lastEvnetID)
+			fmt.Fprintf(w, "id: %d\n", lastEventID)
 			fmt.Fprintf(w, "data: %s\n\n", string(b))
 			f.Flush()
-			lastEvnetID++
+			lastEventID++
 		case <-notify:
-			h.removeClients <- client
 			w.WriteHeader(http.StatusOK)
 			return http.StatusOK
 		}
