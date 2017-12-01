@@ -143,19 +143,10 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", h.config.Origin)
 
-	var notify <-chan bool
-	notifier, ok := w.(http.CloseNotifier)
-	if ok {
-		notify = notifier.CloseNotify()
-	}
 	fmt.Fprintf(w, "retry: %d\n", h.retry)
-	for {
-		select {
-		case pl, open := <-client.ReceivePayload():
-			if !open {
-				http.Error(w, "can't receive a payload", http.StatusInternalServerError)
-				return http.StatusInternalServerError
-			}
+
+	go func() {
+		for pl := range client.ReceivePayload() {
 			eventType := pl.Meta.Type
 			if eventType == heartBeatEvent {
 				// NOTE: if use IE or Edge, need to send "comment" messages each 15-30 seconds, these messages will be used as heartbeat to detect disconnects
@@ -177,12 +168,13 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 			fmt.Fprintf(w, "data: %s\n\n", string(b))
 			f.Flush()
 			lastEventID++
-		case <-notify:
-			w.WriteHeader(http.StatusOK)
-			return http.StatusOK
 		}
-	}
+		w.WriteHeader(http.StatusOK)
+	}()
 
+	<-w.(http.CloseNotifier).CloseNotify()
+
+	return http.StatusOK
 }
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
