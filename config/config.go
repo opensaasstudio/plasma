@@ -42,6 +42,7 @@ type Config struct {
 	Subscriber  Subscriber
 	TLS         Cert `envconfig:"TLS"`
 	Metrics     Metrics
+	Pprof       Pprof
 }
 
 type ServerSentEvent struct {
@@ -139,4 +140,9 @@ type SyslogMetrics struct {
 	Facility int
 	Network  string
 	Addr     string
+}
+
+type Pprof struct {
+	Host string `default:"0.0.0.0"`
+	Port string `default:"6060"`
 }
