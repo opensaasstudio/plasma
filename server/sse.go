@@ -103,14 +103,14 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 		http.Error(w, "specify event queries", http.StatusBadRequest)
 		return http.StatusBadRequest
 	}
-	lastEvnetID := 0
+	lastEventID := 0
 	if id := r.Header.Get("HTTP_LAST_EVENT_ID"); id != "" {
 		if i, err := strconv.Atoi(id); err == nil {
-			lastEvnetID = i
+			lastEventID = i
 		}
 	} else if id, ok := r.URL.Query()["lastEventId"]; ok {
 		if i, err := strconv.Atoi(id[0]); err == nil {
-			lastEvnetID = i
+			lastEventID = i
 		}
 	}
 
@@ -134,32 +134,26 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 
 	client := manager.NewClient(eventRequests)
 	h.newClients <- client
+	defer func() {
+		h.removeClients <- client
+	}()
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", h.config.Origin)
 
-	var notify <-chan bool
-	notifier, ok := w.(http.CloseNotifier)
-	if ok {
-		notify = notifier.CloseNotify()
-	}
 	fmt.Fprintf(w, "retry: %d\n", h.retry)
-	for {
-		select {
-		case pl, open := <-client.ReceivePayload():
-			if !open {
-				http.Error(w, "can't receive a payload", http.StatusInternalServerError)
-				return http.StatusInternalServerError
-			}
+
+	go func() {
+		for pl := range client.ReceivePayload() {
 			eventType := pl.Meta.Type
 			if eventType == heartBeatEvent {
 				// NOTE: if use IE or Edge, need to send "comment" messages each 15-30 seconds, these messages will be used as heartbeat to detect disconnects
 				// https://github.com/Yaffle/EventSource#server-side-requirements
 				fmt.Fprint(w, ":heartbeat \n\n")
 				f.Flush()
-				lastEvnetID++
+				lastEventID++
 				continue
 			}
 			b, err := json.Marshal(pl)
@@ -170,17 +164,17 @@ func (h sseHandler) events(w http.ResponseWriter, r *http.Request) int {
 				)
 				continue
 			}
-			fmt.Fprintf(w, "id: %d\n", lastEvnetID)
+			fmt.Fprintf(w, "id: %d\n", lastEventID)
 			fmt.Fprintf(w, "data: %s\n\n", string(b))
 			f.Flush()
-			lastEvnetID++
-		case <-notify:
-			h.removeClients <- client
-			w.WriteHeader(http.StatusOK)
-			return http.StatusOK
+			lastEventID++
 		}
-	}
+		w.WriteHeader(http.StatusOK)
+	}()
 
+	<-w.(http.CloseNotifier).CloseNotify()
+
+	return http.StatusOK
 }
 
 func (h sseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
