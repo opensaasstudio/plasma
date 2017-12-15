@@ -5,7 +5,8 @@ SERIAL_PACKAGES= \
 		 manager \
 		 pubsub \
 		 server \
-		 subscriber
+		 subscriber \
+		 log
 TARGET_SERIAL_PACKAGES=$(addprefix test-,$(SERIAL_PACKAGES))
 
 install-go:

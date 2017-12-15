@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"google.golang.org/grpc"
@@ -14,6 +15,10 @@ import (
 	"github.com/openfresh/plasma/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+var (
+	regexIPAddress = regexp.MustCompile(`^(.+):\d{4,5}$`)
 )
 
 func NewLogger(config config.Log) (*zap.Logger, error) {
@@ -67,13 +72,22 @@ func HTTPRequestToLogFields(r *http.Request) []zapcore.Field {
 	if addr := r.Header.Get("X-Forwarded-For"); addr != "" {
 		remoteAddr = addr
 	}
+
 	return []zapcore.Field{
 		zap.String("user-agent", r.UserAgent()),
 		zap.String("referer", r.Referer()),
 		zap.Int64("content-length", r.ContentLength),
 		zap.String("host", r.Host),
 		zap.String("method", r.Method),
-		zap.String("remote-addr", remoteAddr),
+		zap.String("remote-addr", removePort(remoteAddr)),
 		zap.String("time", time.Now().Format(time.RFC3339Nano)),
 	}
+}
+
+func removePort(remoteAddr string) string {
+	tokens := regexIPAddress.FindStringSubmatch(remoteAddr)
+	if len(tokens) == 2 {
+		return tokens[1]
+	}
+	return remoteAddr
 }
