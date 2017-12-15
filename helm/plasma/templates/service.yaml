@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "plasma.fullname" . }}
+  labels:
+    app: {{ template "plasma.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.sse.externalPort }}
+      targetPort: sse
+      protocol: TCP
+      name: sse
+    - port: {{ .Values.service.grpc.externalPort }}
+      targetPort: grpc 
+      protocol: TCP
+      name: grpc 
+    - port: {{ .Values.service.metrics.externalPort }}
+      targetPort: metrics 
+      protocol: TCP
+      name: metrics 
+    - port: {{ .Values.service.pprof.externalPort }}
+      targetPort: pprof 
+      protocol: TCP
+      name: pprof 
+  selector:
+    app: {{ template "plasma.name" . }}
+    release: {{ .Release.Name }}

@@ -1,0 +1,127 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "plasma.fullname" . }}
+  labels:
+    app: {{ template "plasma.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+{{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
+      labels:
+        app: {{ template "plasma.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: sse 
+            containerPort: {{ .Values.env.port }}
+            protocol: TCP
+          - name: grpc 
+            containerPort: {{ .Values.env.grpcPort }}
+            protocol: TCP
+          - name: metrics 
+            containerPort: {{ .Values.env.metricsPort }}
+            protocol: TCP
+          - name: pprof 
+            containerPort: {{ .Values.env.pprofPort }}
+            protocol: TCP
+          env:
+          - name: PLASMA_ACCESS_LOG_OUT
+            value: {{ .Values.env.accessLogOut | quote }}
+          - name: PLASMA_ACCESS_LOG_LEVEL
+            value: {{ .Values.env.accessLogLevel | quote }}
+          - name: PLASMA_ERROR_LOG_OUT
+            value: {{ .Values.env.errorLogOut | quote }}
+          - name: PLASMA_ERROR_LOG_LEVEL
+            value: {{ .Values.env.errorLogLevel | quote }}
+          - name: PLASMA_DEBUG
+            value: {{ .Values.env.debug | quote }}
+          - name: PLASMA_ORIGIN
+            value: {{ .Values.env.origin | quote }}
+          - name: PLASMA_PORT
+            value: {{ .Values.env.port | quote }}
+          - name: PLASMA_GRPC_PORT
+            value: {{ .Values.env.grpcPort | quote }}
+          - name: PLASMA_METRICS_PORT
+            value: {{ .Values.env.metricsPort | quote }}
+          - name: PLASMA_SSE_RETRY
+            value: {{ .Values.env.sseRetry | quote }}
+          - name: PLASMA_SSE_EVENT_QUERY
+            value: {{ .Values.env.sseEventQuery | quote }}
+          - name: PLASMA_SUBSCRIBER_TYPE
+            value: {{ .Values.env.subscriberType | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_ADDR
+            value: {{ .Values.env.subscriberRedisAddr | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_PASSWORD
+            value: {{ .Values.env.subscriberRedisPassword | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_DB
+            value: {{ .Values.env.subscriberRedisDb | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_CHANNELS
+            value: {{ .Values.env.subscriberRedisChannels | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_OVER_MAX_RETRY_BEHAVIOR
+            value: {{ .Values.env.subscriberRedisOverMaxRetryBehavior | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_MAX_RETRY
+            value: {{ .Values.env.subscriberRedisMaxRetry | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_TIMEOUT
+            value: {{ .Values.env.subscriberRedisTimeout | quote }}
+          - name: PLASMA_SUBSCRIBER_REDIS_RETRY_INTERBAL
+            value: {{ .Values.env.subscriberRedisRetryInterbal | quote }}
+          - name: PLASMA_MOCK_INTERVAL
+            value: {{ .Values.env.mockInterval | quote }}
+          - name: PLASMA_TLS_CERT_FILE
+            value: {{ .Values.env.tlsCertFile | quote }}
+          - name: PLASMA_TLS_KEY_FILE
+            value: {{ .Values.env.tlsKeyFile | quote }}
+          - name: PLASMA_METRICS_TYPE
+            value: {{ .Values.env.metricsType | quote }}
+          - name: PLASMA_METRICS_LOG_OUT
+            value: {{ .Values.env.metricsLogOut | quote }}
+          - name: PLASMA_METRICS_LOG_PREFIX
+            value: {{ .Values.env.metricsLogPrefix | quote }}
+          - name: PLASMA_METRICS_LOG_FLAG
+            value: {{ .Values.env.metricsLogFlag | quote }}
+          - name: PLASMA_METRICS_LOG_INTERVAL
+            value: {{ .Values.env.metricsLogInterval | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_TAG
+            value: {{ .Values.env.metricsSysLogTag | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_INTERVAL
+            value: {{ .Values.env.metricsSysLogInterval | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_SEVERITY
+            value: {{ .Values.env.metricsSysLogSeverity | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_FACILITY
+            value: {{ .Values.env.metricsSysLogFacility | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_NETWORK
+            value: {{ .Values.env.metricsSysLogNetwork | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_ADDR
+            value: {{ .Values.env.metricsSysLogAddr | quote }}
+          - name: PLASMA_METRICS_SYS_LOG_INTERVAL
+            value: {{ .Values.env.metricsSysLogInterval | quote }}
+          - name: PLASMA_PPROF_HOST
+            value: {{ .Values.env.pprofHost | quote }}
+          - name: PLASMA_PPROF_PORT
+            value: {{ .Values.env.pprofPort | quote }}
+          livenessProbe:
+            httpGet:
+              path: /hc
+              port: {{ .Values.env.port }}
+          readinessProbe:
+            httpGet:
+              path: /hc
+              port: {{ .Values.env.port }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
