@@ -54,6 +54,11 @@ type Subscriber struct {
 	Type  string `default:"mock"`
 	Redis Redis
 	Mock  Mock
+	API   API
+}
+
+type API struct {
+	Interval time.Duration `default:"1s"`
 }
 
 type Mock struct {
