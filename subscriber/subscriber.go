@@ -24,6 +24,8 @@ func New(pb pubsub.PubSuber, errorLogger *zap.Logger, config conf.Config) (Subsc
 		f = newMock
 	case "redis":
 		f = newRedis
+	case "api":
+		f = newApi
 	default:
 		return subscriber, fmt.Errorf("can't get such %s type subscriber", config.Subscriber.Type)
 	}

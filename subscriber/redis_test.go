@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis"
-
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/event"
 	"github.com/openfresh/plasma/log"
@@ -57,15 +55,15 @@ func TestRedisReceiveMessage(t *testing.T) {
 	})
 	assert.NoError(err)
 	go r.Subscribe()
-
-	b, err := json.Marshal(payload)
-	assert.Nil(err)
-	opt := &redis.Options{
-		Addr:     baseRedisConf.Addr,
-		Password: baseRedisConf.Password,
-		DB:       baseRedisConf.DB,
-	}
-	err = redis.NewClient(opt).Publish(baseRedisConf.Channels[0], string(b)).Err()
-	assert.Nil(err)
+	//
+	// b, err := json.Marshal(payload)
+	// assert.Nil(err)
+	// opt := &redis.Options{
+	// 	Addr:     baseRedisConf.Addr,
+	// 	Password: baseRedisConf.Password,
+	// 	DB:       baseRedisConf.DB,
+	// }
+	// err = redis.NewClient(opt).Publish(baseRedisConf.Channels[0], string(b)).Err()
+	// assert.Nil(err)
 
 }

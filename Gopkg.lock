@@ -8,13 +8,35 @@
 
 [[projects]]
   name = "github.com/go-redis/redis"
-  packages = [".","internal","internal/consistenthash","internal/hashtag","internal/pool","internal/proto"]
+  packages = [
+    ".",
+    "internal",
+    "internal/consistenthash",
+    "internal/hashtag",
+    "internal/pool",
+    "internal/proto"
+  ]
   revision = "eb066030c08c254136a0dbfe9f7a3625a0871beb"
 
 [[projects]]
   name = "github.com/golang/protobuf"
-  packages = ["proto","ptypes/any"]
+  packages = [
+    "proto",
+    "ptypes/any"
+  ]
   revision = "2bba0603135d7d7f5cb73b2125beeda19c09f4ef"
+
+[[projects]]
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+  version = "v1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
+  version = "v1.6.1"
 
 [[projects]]
   name = "github.com/kelseyhightower/envconfig"
@@ -32,6 +54,23 @@
   name = "github.com/mssola/user_agent"
   packages = ["."]
   revision = "07efe2b857fb8c02d2dd85c12d0145f58554ec7c"
+
+[[projects]]
+  name = "github.com/openfresh/plasma"
+  packages = [
+    "config",
+    "event",
+    "log",
+    "manager",
+    "metrics",
+    "metrics/sender",
+    "protobuf",
+    "pubsub",
+    "server",
+    "subscriber"
+  ]
+  revision = "e0ddc50b4e92de21505d501a66d36163ab48effe"
+  version = "0.2.2"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -52,7 +91,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","require"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
 
@@ -64,13 +106,29 @@
 
 [[projects]]
   name = "go.uber.org/zap"
-  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","internal/multierror","zapcore"]
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "internal/multierror",
+    "zapcore"
+  ]
   revision = "9cabc84638b70e564c3dab2766efcb1ded2aac9f"
   version = "v1.4.1"
 
 [[projects]]
   name = "golang.org/x/net"
-  packages = ["context","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
+  packages = [
+    "context",
+    "http2",
+    "http2/hpack",
+    "idna",
+    "internal/timeseries",
+    "lex/httplex",
+    "trace"
+  ]
   revision = "5602c733f70afc6dcec6766be0d5034d4c4f14de"
 
 [[projects]]
@@ -80,7 +138,17 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
+  ]
   revision = "e2fd46741f65c5fcf3d8e106e9a45d62cd51d87a"
 
 [[projects]]
@@ -90,13 +158,28 @@
 
 [[projects]]
   name = "google.golang.org/grpc"
-  packages = [".","codes","credentials","grpclb/grpc_lb_v1","grpclog","internal","keepalive","metadata","naming","peer","stats","status","tap","transport"]
+  packages = [
+    ".",
+    "codes",
+    "credentials",
+    "grpclb/grpc_lb_v1",
+    "grpclog",
+    "internal",
+    "keepalive",
+    "metadata",
+    "naming",
+    "peer",
+    "stats",
+    "status",
+    "tap",
+    "transport"
+  ]
   revision = "d8960bd63c6743defa6d54926e5edfa8e4a28e43"
   version = "v1.4.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7ebba6a03e2f4bd559b94d7ace601acf4ee27e172761252f06375ce9ec24d8c2"
+  inputs-digest = "a73aca419e79d49ff302bd01c57a2ad10eead3483c6819f7d97d72f1a4d66459"
   solver-name = "gps-cdcl"
   solver-version = 1

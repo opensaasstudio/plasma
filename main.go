@@ -16,12 +16,12 @@ import (
 
 	"net/http"
 
+	"github.com/Yamashou/plasma/subscriber"
 	"github.com/openfresh/plasma/config"
 	"github.com/openfresh/plasma/log"
 	"github.com/openfresh/plasma/metrics"
 	"github.com/openfresh/plasma/pubsub"
 	"github.com/openfresh/plasma/server"
-	"github.com/openfresh/plasma/subscriber"
 )
 
 func httpListener(logger *zap.Logger, config config.Config) net.Listener {
