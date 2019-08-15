@@ -9,6 +9,8 @@ plasma
 [![Docker Stars](https://img.shields.io/docker/stars/openfresh/plasma.svg)]()
 [![Docker Pulls](https://img.shields.io/docker/pulls/openfresh/plasma.svg)]()
 
+**Attention: This repository was transfererd from [openfresh](https://github.com/openfresh).**
+
 ![logo](img/plasma_logo.png)
 
 plasma is event push middleware by using gRPC stream.
